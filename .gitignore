@@ -1,0 +1,11 @@
+# Claude Code local settings (machine-specific permissions)
+.claude/settings.local.json
+
+# Temporary files
+*.tmp
+*.swp
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
