@@ -1,0 +1,11 @@
+experiment:
+  name: "flan-t5-xl-conll03"
+  description: "FLAN-T5-XL (3B) on CoNLL-03 NER benchmark"
+
+model:
+  variant: "xl"
+  quantization: "8bit"
+
+dataset:
+  type: "conll03"
+  split: "test"

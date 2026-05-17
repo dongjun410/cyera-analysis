@@ -1,0 +1,10 @@
+experiment:
+  name: "flan-t5-large-pii"
+  description: "FLAN-T5-Large on PII-Masking-300k real-world PII benchmark"
+
+model:
+  variant: "large"
+
+dataset:
+  type: "pii-masking"
+  split: "test"
