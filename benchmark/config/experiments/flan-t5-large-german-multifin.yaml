@@ -1,0 +1,6 @@
+experiment:
+  name: "flan-t5-large-german-multifin"
+  description: "FLAN-T5-Large on German-MultiFin hierarchical financial document classification"
+
+dataset:
+  type: "german-multifin"

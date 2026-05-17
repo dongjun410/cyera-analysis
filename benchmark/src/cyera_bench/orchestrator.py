@@ -55,6 +55,15 @@ def _get_dataset_class(name: str):
     elif name == "cxh5types":
         from cyera_bench.datasets.cxh5types import Cxh5typesDataset
         return Cxh5typesDataset
+    elif name == "20newsgroups":
+        from cyera_bench.datasets.twenty_newsgroups import TwentyNewsgroupsDataset
+        return TwentyNewsgroupsDataset
+    elif name == "ledgar":
+        from cyera_bench.datasets.ledgar import LedgarDataset
+        return LedgarDataset
+    elif name == "german-multifin":
+        from cyera_bench.datasets.german_multifin import GermanMultiFinDataset
+        return GermanMultiFinDataset
     raise ValueError(f"Unknown dataset type: {name}")
 
 class BenchmarkOrchestrator:

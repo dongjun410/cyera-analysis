@@ -1,0 +1,6 @@
+experiment:
+  name: "flan-t5-large-20newsgroups"
+  description: "FLAN-T5-Large on 20 Newsgroups document classification"
+
+dataset:
+  type: "20newsgroups"

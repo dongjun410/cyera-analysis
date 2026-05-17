@@ -1,0 +1,6 @@
+experiment:
+  name: "flan-t5-large-ledgar"
+  description: "FLAN-T5-Large on Ledgar legal contract clause classification (100 classes)"
+
+dataset:
+  type: "ledgar"
