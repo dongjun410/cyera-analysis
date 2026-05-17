@@ -26,7 +26,7 @@ class Conll03Dataset(BaseDataset):
 
     def load(self, split: str = "test") -> Dataset:
         if split not in self._cache:
-            ds = load_dataset("conll2003", split=split)
+            ds = load_dataset("conllpp", split=split, trust_remote_code=True)
             self._cache[split] = ds
         return self._cache[split]
 
