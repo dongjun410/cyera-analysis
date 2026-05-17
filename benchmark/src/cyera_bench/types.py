@@ -24,5 +24,6 @@ class BenchmarkResult:
     latency_p95_ms: float = 0.0
     latency_p99_ms: float = 0.0
     gpu_memory_peak_gb: float = 0.0
+    param_count: int = 0
     total_samples: int = 0
     total_time_sec: float = 0.0
