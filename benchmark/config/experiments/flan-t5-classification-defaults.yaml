@@ -1,0 +1,20 @@
+task_type: "classification"
+
+model:
+  type: "flan-t5-classification"
+  variant: "large"
+  device: "cuda"
+  quantization: null
+  batch_sizes: [1, 2, 4, 8]
+
+dataset:
+  data_root: ""
+
+metrics:
+  - classification_accuracy
+  - throughput_chars_per_sec
+  - latency_p50_p95_p99
+
+output:
+  formats: [terminal, markdown, json]
+  path: "./results/"

@@ -1,0 +1,11 @@
+experiment:
+  name: "doc-classifier-cxh5types"
+  description: "doc-classifier (sklearn TF-IDF+LR) on cxh5types document classification"
+
+model:
+  type: "doc-classifier-sklearn"
+  variant: "sklearn"
+  device: "cpu"
+
+dataset:
+  type: "cxh5types"

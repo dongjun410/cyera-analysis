@@ -254,7 +254,6 @@ def test_model_variants():
         "small": ("google/flan-t5-small", 77_000_000),
         "base": ("google/flan-t5-base", 250_000_000),
         "large": ("google/flan-t5-large", 780_000_000),
-        "xl": ("google/flan-t5-xl", 3_000_000_000),
     }
     for variant, (expected_name, expected_params) in variants.items():
         m = FlanT5Model(variant=variant, device="cpu")
@@ -291,14 +290,12 @@ _MODEL_MAP: Dict[str, Dict[str, str]] = {
     "small": {"hf_name": "google/flan-t5-small",  "ner_checkpoint": "pepegiallo/flan-t5-small_ner"},
     "base":  {"hf_name": "google/flan-t5-base",   "ner_checkpoint": "pepegiallo/flan-t5-base_ner"},
     "large": {"hf_name": "google/flan-t5-large",  "ner_checkpoint": None},
-    "xl":    {"hf_name": "google/flan-t5-xl",     "ner_checkpoint": None},
 }
 
 _PARAM_COUNTS: Dict[str, int] = {
     "small": 77_000_000,
     "base":  250_000_000,
     "large": 780_000_000,
-    "xl":    3_000_000_000,
 }
 
 class FlanT5Model(BaseModel):
@@ -1452,7 +1449,6 @@ git commit -m "feat: add CLI entry point (cyera-bench --config + --compare)"
 - Create: `benchmark/config/experiments/flan-t5-base-conll03.yaml`
 - Create: `benchmark/config/experiments/flan-t5-large-conll03.yaml`
 - Create: `benchmark/config/experiments/flan-t5-large-pii.yaml`
-- Create: `benchmark/config/experiments/flan-t5-xl-conll03.yaml`
 
 - [ ] **Step 1: Write defaults config**
 
@@ -1519,26 +1515,11 @@ dataset:
   split: "test"
 ```
 
-```yaml
-# benchmark/config/experiments/flan-t5-xl-conll03.yaml
-experiment:
-  name: "flan-t5-xl-conll03"
-  description: "FLAN-T5-XL (3B) on CoNLL-03 NER benchmark"
-
-model:
-  variant: "xl"
-  quantization: "8bit"
-
-dataset:
-  type: "conll03"
-  split: "test"
-```
-
 - [ ] **Step 3: Commit**
 
 ```bash
 git add benchmark/config/
-git commit -m "feat: add YAML experiment configs for base/large/xl on CoNLL-03 and PII"
+git commit -m "feat: add YAML experiment configs for base/large on CoNLL-03 and PII"
 ```
 
 ---

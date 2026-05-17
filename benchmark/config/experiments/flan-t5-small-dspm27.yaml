@@ -1,0 +1,9 @@
+experiment:
+  name: "flan-t5-small-dspm27"
+  description: "FLAN-T5-Small on dspm27 document classification"
+
+model:
+  variant: "small"
+
+dataset:
+  type: "dspm27"

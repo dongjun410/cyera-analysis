@@ -8,7 +8,6 @@ def test_model_variants():
         "small": ("google/flan-t5-small", 77_000_000),
         "base": ("google/flan-t5-base", 250_000_000),
         "large": ("google/flan-t5-large", 780_000_000),
-        "xl": ("google/flan-t5-xl", 3_000_000_000),
     }
     for variant, (expected_name, expected_params) in variants.items():
         m = FlanT5Model(variant=variant, device="cpu")

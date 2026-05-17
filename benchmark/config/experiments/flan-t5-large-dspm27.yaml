@@ -1,0 +1,9 @@
+experiment:
+  name: "flan-t5-large-dspm27"
+  description: "FLAN-T5-Large on dspm27 document classification"
+
+model:
+  variant: "large"
+
+dataset:
+  type: "dspm27"

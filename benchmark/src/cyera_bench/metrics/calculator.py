@@ -1,7 +1,11 @@
 from typing import List, Dict, Tuple
 import numpy as np
-from seqeval.metrics import classification_report as seqeval_report
 from cyera_bench.types import Entity
+
+
+def _get_seqeval_report():
+    from seqeval.metrics import classification_report as cr
+    return cr
 
 
 class MetricsCalculator:
@@ -16,7 +20,7 @@ class MetricsCalculator:
             return {}, 0.0
 
         try:
-            report = seqeval_report(y_true, y_pred, output_dict=True, zero_division=0)
+            report = _get_seqeval_report()(y_true, y_pred, output_dict=True, zero_division=0)
         except Exception:
             return {}, 0.0
 

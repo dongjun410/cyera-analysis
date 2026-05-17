@@ -1,0 +1,9 @@
+experiment:
+  name: "flan-t5-base-cxh5types"
+  description: "FLAN-T5-Base on cxh5types document classification"
+
+model:
+  variant: "base"
+
+dataset:
+  type: "cxh5types"

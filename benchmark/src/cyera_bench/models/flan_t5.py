@@ -4,17 +4,15 @@ from cyera_bench.models.base import BaseModel
 from cyera_bench.types import Entity
 
 _MODEL_MAP: Dict[str, Dict[str, str | None]] = {
-    "small": {"hf_name": "google/flan-t5-small",  "ner_checkpoint": "pepegiallo/flan-t5-small_ner"},
+    "small": {"hf_name": "google/flan-t5-small",  "ner_checkpoint": "agentlans/flan-t5-small-ner"},
     "base":  {"hf_name": "google/flan-t5-base",   "ner_checkpoint": "pepegiallo/flan-t5-base_ner"},
     "large": {"hf_name": "google/flan-t5-large",  "ner_checkpoint": None},
-    "xl":    {"hf_name": "google/flan-t5-xl",     "ner_checkpoint": None},
 }
 
 _PARAM_COUNTS: Dict[str, int] = {
     "small": 77_000_000,
     "base":  250_000_000,
     "large": 780_000_000,
-    "xl":    3_000_000_000,
 }
 
 
@@ -24,10 +22,21 @@ class FlanT5Model(BaseModel):
         if variant not in _MODEL_MAP:
             raise ValueError(f"Unknown variant '{variant}'. Choose: {list(_MODEL_MAP.keys())}")
         self._variant = variant
-        self._device = device
         self._quantization = quantization
         self._ner_checkpoint = ner_checkpoint
         self._pipe: Optional[object] = None
+
+        # Auto fallback: CPU when CUDA requested but unavailable
+        if device == "cuda":
+            try:
+                import torch
+                if not torch.cuda.is_available():
+                    print(f"  [INFO] CUDA not available, falling back to CPU for {variant}")
+                    device = "cpu"
+            except ImportError:
+                print(f"  [INFO] torch not installed, using CPU for {variant}")
+                device = "cpu"
+        self._device = device
 
     @property
     def name(self) -> str:

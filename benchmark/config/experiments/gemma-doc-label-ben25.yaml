@@ -1,0 +1,12 @@
+experiment:
+  name: "gemma-doc-label-ben25"
+  description: "gemma-doc-label (Gemma4:e2b Ollama) on ben25 document classification"
+
+model:
+  type: "gemma-doc-label"
+  variant: "gemma4:e2b"
+  device: "cpu"
+  batch_sizes: [1]
+
+dataset:
+  type: "ben25"

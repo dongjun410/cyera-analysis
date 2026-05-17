@@ -8,7 +8,7 @@
 
 ## 1. Scope
 
-- Phase 1 (this spec): FLAN-T5 Small/Base/Large/XL across public NER benchmarks + PII detection datasets.
+- Phase 1 (this spec): FLAN-T5 Small/Base/Large across public NER benchmarks + PII detection datasets.
 - Phase 2 (future): Mistral model integration via the same `BaseModel` interface, dual-model pipeline.
 
 ## 2. Architecture
@@ -57,7 +57,7 @@ class MetricsCalculator:
 
 | Layer | Phase 1 | Phase 2+ |
 |-------|---------|----------|
-| Models | `FlanT5Model` (Small/Base/Large/XL) | `MistralModel` |
+| Models | `FlanT5Model` (Small/Base/Large) | `MistralModel` |
 | Datasets | `Conll03Dataset`, `PiiMaskingDataset`, `SyntheticPiiDataset` | `OntonotesDataset`, `CustomCSVDataset` |
 | Metrics | NER F1 (seqeval), throughput, P50/P95/P99 latency | Per-type confusion matrix, calibration |
 
@@ -89,7 +89,7 @@ experiment:
 
 model:
   type: "flan-t5"
-  variant: "large"           # small | base | large | xl
+  variant: "large"           # small | base | large
   quantization: null          # null | 4bit | 8bit
   device: "cuda"
 
@@ -146,7 +146,6 @@ benchmark/
 │       ├── flan-t5-base-conll03.yaml
 │       ├── flan-t5-large-conll03.yaml
 │       ├── flan-t5-large-pii.yaml
-│       └── flan-t5-xl-conll03.yaml
 ├── src/cyera_bench/
 │   ├── __init__.py
 │   ├── orchestrator.py

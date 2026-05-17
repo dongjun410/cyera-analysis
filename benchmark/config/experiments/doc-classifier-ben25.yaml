@@ -1,0 +1,11 @@
+experiment:
+  name: "doc-classifier-ben25"
+  description: "doc-classifier (sklearn TF-IDF+LR) on ben25 document classification"
+
+model:
+  type: "doc-classifier-sklearn"
+  variant: "sklearn"
+  device: "cpu"
+
+dataset:
+  type: "ben25"

@@ -1,0 +1,9 @@
+experiment:
+  name: "flan-t5-small-ben25"
+  description: "FLAN-T5-Small on ben25 document classification"
+
+model:
+  variant: "small"
+
+dataset:
+  type: "ben25"

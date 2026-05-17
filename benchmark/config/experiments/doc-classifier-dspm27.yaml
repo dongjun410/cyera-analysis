@@ -1,0 +1,11 @@
+experiment:
+  name: "doc-classifier-dspm27"
+  description: "doc-classifier (sklearn TF-IDF+LR) on dspm27 document classification"
+
+model:
+  type: "doc-classifier-sklearn"
+  variant: "sklearn"
+  device: "cpu"
+
+dataset:
+  type: "dspm27"

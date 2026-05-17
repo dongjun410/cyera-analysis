@@ -1,0 +1,9 @@
+experiment:
+  name: "flan-t5-large-cxh5types"
+  description: "FLAN-T5-Large on cxh5types document classification"
+
+model:
+  variant: "large"
+
+dataset:
+  type: "cxh5types"

@@ -1,0 +1,9 @@
+experiment:
+  name: "flan-t5-large-ben25"
+  description: "FLAN-T5-Large on ben25 document classification"
+
+model:
+  variant: "large"
+
+dataset:
+  type: "ben25"
