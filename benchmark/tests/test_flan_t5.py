@@ -16,6 +16,7 @@ def test_model_variants():
         assert m.param_count == expected_params
 
 
+@pytest.mark.skip(reason="requires model download from HuggingFace (~500MB)")
 def test_predict_returns_list_of_entity_lists():
     m = FlanT5Model(variant="base", device="cpu")
     texts = ["John works at Google in New York.", "Mary visited Paris."]
