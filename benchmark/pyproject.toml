@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "cyera-bench"
+version = "0.1.0"
+description = "FLAN-T5 NER/PII benchmark framework — validates Cyera DataDNA technical claims"
+requires-python = ">=3.11"
+dependencies = [
+    "torch>=2.5.0",
+    "transformers>=4.46.0",
+    "datasets>=3.0.0",
+    "evaluate>=0.4.0",
+    "seqeval>=1.2.0",
+    "accelerate>=1.0.0",
+    "bitsandbytes>=0.44.0",
+    "pyyaml>=6.0",
+    "rich>=13.0",
+    "numpy>=1.26",
+    "scikit-learn>=1.5",
+]
+
+[project.scripts]
+cyera-bench = "cyera_bench.__main__:main"
+
+[tool.setuptools.package-dir]
+"" = "src"
