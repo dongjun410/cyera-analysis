@@ -1,6 +1,8 @@
+task_type: "classification"
+
 experiment:
   name: "gemma-doc-label-dspm27"
-  description: "gemma-doc-label (Gemma4:e2b Ollama) on dspm27 document classification"
+  description: "GemmaDocLabelModel on dspm27 document classification"
 
 model:
   type: "gemma-doc-label"
@@ -10,3 +12,13 @@ model:
 
 dataset:
   type: "dspm27"
+  data_root: ""
+
+metrics:
+  - classification_accuracy
+  - throughput_chars_per_sec
+  - latency_p50_p95_p99
+
+output:
+  formats: [terminal, markdown, json]
+  path: "./results/"

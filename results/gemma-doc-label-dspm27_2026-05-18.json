@@ -1,0 +1,239 @@
+{
+  "experiment_name": "gemma-doc-label-dspm27",
+  "model_name": "gemma-doc-label (gemma4:e2b)",
+  "model_variant": "gemma4:e2b",
+  "model_param_count": 2000000000,
+  "dataset_name": "dspm27",
+  "l1_accuracy": 0.6296296296296297,
+  "l2_accuracy": 0.5555555555555556,
+  "l2_accuracy_given_correct_l1": 0.8823529411764706,
+  "macro_l1_f1": 0.45873015873015877,
+  "macro_l2_f1": 0.4257575757575758,
+  "per_l1_metrics": {
+    "Customer & Client Records": {
+      "precision": 0.5,
+      "recall": 0.5,
+      "f1": 0.5,
+      "support": 2
+    },
+    "Executive & Board Documents": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 1
+    },
+    "Financial & Accounting": {
+      "precision": 0.6666666666666666,
+      "recall": 1.0,
+      "f1": 0.8,
+      "support": 4
+    },
+    "Health, Safety & Environment (HSE)": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 2
+    },
+    "Human Resources & Payroll": {
+      "precision": 1.0,
+      "recall": 0.8,
+      "f1": 0.8888888888888888,
+      "support": 5
+    },
+    "IT & Systems": {
+      "precision": 0.5,
+      "recall": 1.0,
+      "f1": 0.6666666666666666,
+      "support": 1
+    },
+    "Legal & Compliance": {
+      "precision": 1.0,
+      "recall": 0.3333333333333333,
+      "f1": 0.5,
+      "support": 3
+    },
+    "Marketing & Communications": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 1
+    },
+    "Product & Service Documentation": {
+      "precision": 0.25,
+      "recall": 1.0,
+      "f1": 0.4,
+      "support": 1
+    },
+    "Projects & Programs": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 1
+    },
+    "Research & Analysis": {
+      "precision": 0.5,
+      "recall": 0.5,
+      "f1": 0.5,
+      "support": 2
+    },
+    "Sales & Business Development": {
+      "precision": 0.3333333333333333,
+      "recall": 1.0,
+      "f1": 0.5,
+      "support": 1
+    },
+    "Strategy & Corporate Planning": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1": 0.6666666666666666,
+      "support": 2
+    },
+    "Training & Learning Materials": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 1
+    }
+  },
+  "per_l2_metrics": {
+    "Application and integration design documents": {
+      "precision": 0.5,
+      "recall": 1.0,
+      "f1": 0.6666666666666666,
+      "support": 1
+    },
+    "Budget plans & forecasts": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 1
+    },
+    "Certificates of completion & accreditation records": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 1
+    },
+    "Contracts & agreements": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 1
+    },
+    "Customer onboarding forms & profiles": {
+      "precision": 0.5,
+      "recall": 0.5,
+      "f1": 0.5,
+      "support": 2
+    },
+    "Employee contracts & offer letters": {
+      "precision": 0.5,
+      "recall": 1.0,
+      "f1": 0.6666666666666666,
+      "support": 1
+    },
+    "Investment & treasury reports": {
+      "precision": 0.5,
+      "recall": 1.0,
+      "f1": 0.6666666666666666,
+      "support": 1
+    },
+    "M&A, partnership & investment evaluation documents": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 1
+    },
+    "Non-disclosure agreements (NDAs)": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 1
+    },
+    "Onboarding & offboarding checklists": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 1
+    },
+    "Payroll reports & payslips": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 1
+    },
+    "Press releases & media kits": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 1
+    },
+    "Requirements, user stories & specifications": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 1
+    },
+    "Research reports & white papers": {
+      "precision": 0.5,
+      "recall": 0.5,
+      "f1": 0.5,
+      "support": 2
+    },
+    "Shareholder communications & meeting materials": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 1
+    },
+    "Strategic plans & roadmaps": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 1
+    },
+    "Terms & conditions / policies": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 1
+    },
+    "financial_statements_profit_and_loss_balance_sheet_cash_flow": {
+      "precision": 0.6666666666666666,
+      "recall": 1.0,
+      "f1": 0.8,
+      "support": 2
+    },
+    "occupational_health_records_anonymised_where_required": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 2
+    },
+    "partner_and_channel_agreements_sales_focused": {
+      "precision": 0.3333333333333333,
+      "recall": 1.0,
+      "f1": 0.5,
+      "support": 1
+    },
+    "recruitment_and_interview_documents_cvs_interview_notes": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1": 0.6666666666666666,
+      "support": 2
+    },
+    "regulatory_and_standards_compliance_records_product_specific": {
+      "precision": 0.25,
+      "recall": 1.0,
+      "f1": 0.4,
+      "support": 1
+    }
+  },
+  "throughput_chars_per_sec": 4753832650.946308,
+  "latency_p50_ms": 0.000100000761449337,
+  "latency_p95_ms": 0.0007600006938446308,
+  "latency_p99_ms": 0.003071999963140111,
+  "gpu_memory_peak_gb": 0.0,
+  "total_samples": 27,
+  "total_time_sec": 7.400012691505253e-06
+}

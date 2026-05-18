@@ -1,6 +1,8 @@
+task_type: "classification"
+
 experiment:
   name: "gemma-doc-label-cxh5types"
-  description: "gemma-doc-label (Gemma4:e2b Ollama) on cxh5types document classification"
+  description: "GemmaDocLabelModel on cxh5types document classification"
 
 model:
   type: "gemma-doc-label"
@@ -10,3 +12,13 @@ model:
 
 dataset:
   type: "cxh5types"
+  data_root: ""
+
+metrics:
+  - classification_accuracy
+  - throughput_chars_per_sec
+  - latency_p50_p95_p99
+
+output:
+  formats: [terminal, markdown, json]
+  path: "./results/"

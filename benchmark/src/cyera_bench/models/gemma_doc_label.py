@@ -1,12 +1,35 @@
 import json
-import os
 import re
 import urllib.request
 from typing import Dict, List
 
 
-GEMMA_API_URL = "http://127.0.0.1:8003/classify_text"
 GEMMA_TIMEOUT_SEC = 600
+OLLAMA_API_URL = "http://127.0.0.1:11434/api/generate"
+OLLAMA_MODEL = "gemma4:e2b"
+
+_L1_PROMPT = (
+    "You are labeling enterprise documents for a hierarchy classifier.\n\n"
+    "Task: Choose EXACTLY ONE L1 label from the list below.\n\n"
+    "Allowed L1 labels:\n{l1_lines}\n\n"
+    "Document filename:\n{filename}\n\n"
+    "Document text:\n{clipped}\n\n"
+    "Return STRICT JSON only:\n"
+    '{{"l1":"<exact L1 from list>", "confidence":"high|medium|low",'
+    ' "rationale":"one short sentence"}}'
+)
+
+_L2_PROMPT = (
+    "You are labeling enterprise documents for a hierarchy classifier.\n\n"
+    "Task: L1 is already fixed. Choose EXACTLY ONE L2 label from this L1's list.\n\n"
+    "Fixed L1:\n{l1}\n\n"
+    "Allowed L2 labels for this L1:\n{l2_lines}\n\n"
+    "Document filename:\n{filename}\n\n"
+    "Document text:\n{clipped}\n\n"
+    "Return STRICT JSON only:\n"
+    '{{"l2":"<exact L2 from list>", "confidence":"high|medium|low",'
+    ' "rationale":"one short sentence"}}'
+)
 
 
 def _to_snake(text: str) -> str:
@@ -19,141 +42,20 @@ def _to_snake(text: str) -> str:
     return t
 
 
-_TAXONOMY_PATH = os.path.join(
-    os.path.dirname(__file__), "..", "..", "..", "..", "..",
-    "ZerosOne", "gemma-doc-label", "config", "file_labels_20_10.json",
-)
-
-
-def _build_taxonomy():
-    """Read taxonomy and return (l1_map, l2_to_l1_map, word_index).
-
-    l1_map: {snake: display_name}
-    l2_to_l1_map: {snake: (l2_display, l1_display)}
-    word_index: {word: [snake_key, ...]}  -- inverted index for word overlap search
-    """
-    l1_map: Dict[str, str] = {}
-    l2_to_l1: Dict[str, tuple] = {}
-    word_index: Dict[str, List[str]] = {}
-
-    def _index(snake_key: str) -> None:
-        for w in snake_key.split("_"):
-            if len(w) > 1:
-                word_index.setdefault(w, []).append(snake_key)
-
-    tax_path = os.path.normpath(_TAXONOMY_PATH)
-    try:
-        with open(tax_path, "r", encoding="utf-8") as f:
-            taxonomy = json.load(f)
-        for cat in taxonomy.get("categories", []):
-            l1_display = cat["name"]
-            l1_snake = _to_snake(l1_display)
-            l1_map[l1_snake] = l1_display
-            _index(l1_snake)
-            for ft in cat.get("file_types", []):
-                l2_snake = _to_snake(ft)
-                l2_to_l1[l2_snake] = (ft, l1_display)
-                _index(l2_snake)
-    except FileNotFoundError:
-        pass
-    return l1_map, l2_to_l1, word_index
-
-
-def _word_subset(a: str, b: str) -> bool:
-    """True if one word is a close variant of another (substring, differ by ≤1 char)."""
-    if a == b:
-        return True
-    longer = max(len(a), len(b))
-    shorter = min(len(a), len(b))
-    # Only accept if lengths differ by at most 1 (e.g. "nda"~"ndas", "invoice"~"invoices")
-    return (a in b or b in a) and shorter >= longer - 1
-
-
-def _fuzzy_match(raw_label: str, taxonomy: tuple) -> str:
-    """Match a raw label to the closest L1 display name.
-
-    Strategy: exact match → substring containment → word-level IDF overlap.
-    """
-    if not raw_label:
-        return "unknown"
-
-    l1_map, l2_to_l1, word_index = taxonomy
-    raw_snake = _to_snake(raw_label)
-
-    # 1) Exact match L1 or L2
-    if raw_snake in l1_map:
-        return l1_map[raw_snake]
-    if raw_snake in l2_to_l1:
-        return l2_to_l1[raw_snake][1]
-
-    # 2) Substring containment at full key level (minimum 4 chars to avoid false matches)
-    if len(raw_snake) >= 4:
-        for l2_snake, (_, l1_display) in l2_to_l1.items():
-            if raw_snake in l2_snake or l2_snake in raw_snake:
-                return l1_display
-        for l1_snake, l1_display in l1_map.items():
-            if raw_snake in l1_snake or l1_snake in raw_snake:
-                return l1_display
-
-    # 3) Word-level overlap with IDF-weighted scoring + minimum discriminability
-    raw_words = [w for w in raw_snake.split("_") if len(w) > 0]
-    if not raw_words:
-        return "unknown"
-
-    all_snake_keys = set(l1_map.keys()) | set(l2_to_l1.keys())
-    total_labels = len(all_snake_keys)
-    import math
-
-    # IDF per word (higher = more discriminating). Skip words too short or too common.
-    raw_idfs: Dict[str, float] = {}
-    for rw in raw_words:
-        if len(rw) < 3:  # skip very short tokens (too ambiguous as substrings)
-            continue
-        n = sum(1 for tax_key in all_snake_keys
-                if any(_word_subset(rw, tw) for tw in tax_key.split("_")))
-        idf = math.log((total_labels + 1) / (n + 1)) + 1
-        if idf >= 2.0:  # require minimum discriminability
-            raw_idfs[rw] = idf
-
-    if not raw_idfs:
-        return "unknown"
-
-    total_idf = sum(raw_idfs.values())
-    best_key, best_score = "", 0.0
-    for tax_key in all_snake_keys:
-        tax_words = tax_key.split("_")
-        matched_idf = 0.0
-        for rw, idf_val in raw_idfs.items():
-            for tw in tax_words:
-                if _word_subset(rw, tw):
-                    matched_idf += idf_val
-                    break
-        if matched_idf > 0:
-            score = matched_idf / total_idf
-            if score > best_score:
-                best_score = score
-                best_key = tax_key
-
-    if best_key in l1_map:
-        return l1_map[best_key]
-    if best_key in l2_to_l1:
-        return l2_to_l1[best_key][1]
-    return "unknown"
-
-
 class GemmaDocLabelModel:
-    """gemma-doc-label HTTP API wrapper.
+    """Gemma4:e2b document classification via direct Ollama API calls.
 
-    Calls the Gemma4:e2b Ollama classification service at port 8003.
-    Requires gemma-doc-label service to be running.
+    Uses Ollama /api/generate directly with display-name prompts for L1+L2
+    classification, followed by fuzzy label matching on the benchmark side.
+    Does NOT use the gemma-doc-label service.
     """
 
     def __init__(self, variant: str = "gemma4:e2b", device: str = "cpu",
                  quantization: str | None = None,
-                 api_url: str = GEMMA_API_URL):
-        self._api_url = api_url
+                 api_url: str = ""):
         self._variant = variant
-        self._taxonomy = _build_taxonomy()
+        # num_gpu: 99=force all layers to GPU, 0=force CPU
+        self._num_gpu = 99 if device == "cuda" else 0
 
     @property
     def name(self) -> str:
@@ -181,46 +83,125 @@ class GemmaDocLabelModel:
         results: List[Dict[str, str]] = []
         for text in texts:
             try:
-                result = self._classify_one(text)
+                result = self._classify_direct(text, l1_options, l2_options)
             except Exception as e:
                 result = {"l1": "error", "l2": str(e)[:50]}
             results.append(result)
         return results
 
-    def _classify_one(self, text: str) -> Dict[str, str]:
-        data = json.dumps({"text": text, "filename": "benchmark.txt"}).encode("utf-8")
+    def _classify_direct(self, text: str, l1_options: List[str],
+                         l2_options: Dict[str, List[str]]) -> Dict[str, str]:
+        """Full classification via direct Ollama calls (bypasses service matching)."""
+        # Step 1: L1 classification
+        l1_lines = "\n".join(f"- {l}" for l in l1_options)
+        prompt = _L1_PROMPT.format(
+            l1_lines=l1_lines,
+            filename="benchmark.txt",
+            clipped=text[:8000],
+        )
+        raw_l1 = self._call_ollama_json(prompt, key="l1")
+        l1 = self._match_l1_label(raw_l1, l1_options)
+
+        # Step 2: L2 classification (only if L1 matched)
+        l2 = "unknown"
+        if l1 and l1 != "unknown":
+            l2_candidates = l2_options.get(l1, [])
+            if l2_candidates:
+                l2_lines = "\n".join(f"- {c}" for c in l2_candidates)
+                prompt = _L2_PROMPT.format(
+                    l1=l1,
+                    l2_lines=l2_lines,
+                    filename="benchmark.txt",
+                    clipped=text[:8000],
+                )
+                raw_l2 = self._call_ollama_json(prompt, key="l2")
+                l2 = self._match_l2_label(raw_l2, l2_candidates)
+
+        return {"l1": l1 or "unknown", "l2": l2 or "unknown"}
+
+    def _call_ollama_json(self, prompt: str, key: str) -> str:
+        """Call Ollama /api/generate and extract the value for `key` from JSON response."""
+        opts = {"temperature": 0.0, "num_predict": 64, "num_gpu": self._num_gpu}
+        payload = {
+            "model": OLLAMA_MODEL,
+            "prompt": prompt,
+            "stream": False,
+            "format": "json",
+            "options": opts,
+        }
         req = urllib.request.Request(
-            self._api_url,
-            data=data,
+            OLLAMA_API_URL,
+            data=json.dumps(payload).encode("utf-8"),
             headers={"Content-Type": "application/json"},
             method="POST",
         )
         with urllib.request.urlopen(req, timeout=GEMMA_TIMEOUT_SEC) as resp:
-            raw = json.loads(resp.read().decode("utf-8"))
+            raw = json.loads(resp.read().decode("utf-8", errors="ignore"))
+        answer = raw.get("response", "").strip()
+        parsed = self._parse_json(answer)
+        return parsed.get(key, "") if isinstance(parsed, dict) else ""
 
-        result = raw.get("result", {})
+    @staticmethod
+    def _match_l1_label(raw_label: str, candidates: List[str]) -> str:
+        """Fuzzy match raw L1 label to the closest candidate (display names)."""
+        if not raw_label:
+            return "unknown"
+        raw_snake = _to_snake(raw_label)
+        # Exact match
+        for c in candidates:
+            if _to_snake(c) == raw_snake:
+                return c
+        # Substring match (raw in candidate or vice versa)
+        for c in candidates:
+            c_snake = _to_snake(c)
+            if (len(raw_snake) >= 3 and raw_snake in c_snake) or c_snake in raw_snake:
+                return c
+        # Word overlap
+        raw_words = set(raw_snake.split("_"))
+        for c in candidates:
+            c_words = set(_to_snake(c).split("_"))
+            if raw_words & c_words:
+                return c
+        return "unknown"
 
-        l1_obj = result.get("l1", {})
-        l2_obj = result.get("l2", {})
-        l1_label = l1_obj.get("label", "") if isinstance(l1_obj, dict) else ""
-        l2_label = l2_obj.get("label", "") if isinstance(l2_obj, dict) else ""
+    @staticmethod
+    def _parse_json(text: str) -> dict:
+        """Extract JSON object from text, with fallback."""
+        try:
+            obj = json.loads(text)
+            if isinstance(obj, dict):
+                return obj
+        except Exception:
+            pass
+        m = re.search(r"\{.*\}", text, flags=re.DOTALL)
+        if m:
+            try:
+                obj = json.loads(m.group(0))
+                if isinstance(obj, dict):
+                    return obj
+            except Exception:
+                pass
+        return {}
 
-        # If service-side exact matching failed, extract raw label from Ollama output
-        if not l1_label:
-            l1_label = self._extract_raw_label(result, "l1")
-            l1_label = _fuzzy_match(l1_label, self._taxonomy)
-        if not l2_label:
-            l2_label = self._extract_raw_label(result, "l2")
-            l2_label = _fuzzy_match(l2_label, self._taxonomy)
-
-        return {"l1": l1_label or "unknown", "l2": l2_label or "unknown"}
-
-    def _extract_raw_label(self, result: dict, level: str) -> str:
-        """Extract raw Gemma label from raw_outputs when service matching failed."""
-        raw_outputs = result.get("raw_outputs", {})
-        calls = raw_outputs.get(f"{level}_calls", [])
-        for call in reversed(calls):  # Last call first (may have retried)
-            parsed = call.get("parsed", {})
-            if isinstance(parsed, dict) and parsed.get(level, "").strip():
-                return parsed[level].strip()
-        return ""
+    @staticmethod
+    def _match_l2_label(raw_label: str, candidates: List[str]) -> str:
+        """Fuzzy match raw L2 label to the closest candidate."""
+        if not raw_label:
+            return "unknown"
+        raw_snake = _to_snake(raw_label)
+        # Exact match
+        for c in candidates:
+            if _to_snake(c) == raw_snake:
+                return c
+        # Substring match
+        for c in candidates:
+            c_snake = _to_snake(c)
+            if raw_snake in c_snake or c_snake in raw_snake:
+                return c
+        # Word-level match: any raw word found in candidate words
+        raw_words = set(raw_snake.split("_"))
+        for c in candidates:
+            c_words = set(_to_snake(c).split("_"))
+            if raw_words & c_words:
+                return c
+        return "unknown"

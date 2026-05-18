@@ -1,0 +1,71 @@
+{
+  "experiment_name": "gemma-doc-label-cxh5types",
+  "model_name": "gemma-doc-label (gemma4:e2b)",
+  "model_variant": "gemma4:e2b",
+  "model_param_count": 2000000000,
+  "dataset_name": "cxh5types",
+  "l1_accuracy": 0.9186046511627907,
+  "l2_accuracy": 0.8643410852713178,
+  "l2_accuracy_given_correct_l1": 0.9409282700421941,
+  "macro_l1_f1": 0.9071784404818839,
+  "macro_l2_f1": 0.8591451097679899,
+  "per_l1_metrics": {
+    "Financial & Accounting": {
+      "precision": 0.7246376811594203,
+      "recall": 1.0,
+      "f1": 0.8403361344537815,
+      "support": 50
+    },
+    "Human Resources & Payroll": {
+      "precision": 0.9885057471264368,
+      "recall": 0.819047619047619,
+      "f1": 0.8958333333333334,
+      "support": 105
+    },
+    "Legal & Compliance": {
+      "precision": 0.9901960784313726,
+      "recall": 0.9805825242718447,
+      "f1": 0.9853658536585366,
+      "support": 103
+    }
+  },
+  "per_l2_metrics": {
+    "Invoices (customer invoices, credit notes)": {
+      "precision": 0.7246376811594203,
+      "recall": 1.0,
+      "f1": 0.8403361344537815,
+      "support": 50
+    },
+    "Non-disclosure agreements (NDAs)": {
+      "precision": 0.8909090909090909,
+      "recall": 0.9607843137254902,
+      "f1": 0.9245283018867925,
+      "support": 51
+    },
+    "Payroll reports & payslips": {
+      "precision": 0.8596491228070176,
+      "recall": 0.98,
+      "f1": 0.9158878504672897,
+      "support": 50
+    },
+    "Recruitment & interview documents (CVs, interview notes)": {
+      "precision": 1.0,
+      "recall": 0.5454545454545454,
+      "f1": 0.7058823529411765,
+      "support": 55
+    },
+    "Terms & conditions / policies": {
+      "precision": 0.9574468085106383,
+      "recall": 0.8653846153846154,
+      "f1": 0.9090909090909091,
+      "support": 52
+    }
+  },
+  "throughput_chars_per_sec": 4519404756.108566,
+  "latency_p50_ms": 0.000100000761449337,
+  "latency_p95_ms": 0.000100000761449337,
+  "latency_p99_ms": 0.000200001522898674,
+  "gpu_memory_peak_gb": 0.0,
+  "total_samples": 258,
+  "total_time_sec": 2.9099966923240572e-05
+}
