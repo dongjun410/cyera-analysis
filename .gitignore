@@ -1,9 +1,6 @@
 # Claude Code local settings (machine-specific permissions)
 .claude/
 
-# Benchmark output
-results/
-
 # Temporary files
 *.tmp
 *.swp

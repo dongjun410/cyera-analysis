@@ -1,0 +1,203 @@
+{
+  "experiment_name": "gemma-doc-label-ben25",
+  "model_name": "gemma-doc-label (gemma4:e2b)",
+  "model_variant": "gemma4:e2b",
+  "model_param_count": 2000000000,
+  "dataset_name": "ben25",
+  "l1_accuracy": 0.2,
+  "l2_accuracy": 0.0,
+  "l2_accuracy_given_correct_l1": 0.0,
+  "macro_l1_f1": 0.08608058608058608,
+  "macro_l2_f1": 0.0,
+  "per_l1_metrics": {
+    "Customer & Client Records": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 1
+    },
+    "Financial & Accounting": {
+      "precision": 1.0,
+      "recall": 0.3333333333333333,
+      "f1": 0.5,
+      "support": 9
+    },
+    "Health, Safety & Environment (HSE)": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 1
+    },
+    "Human Resources & Payroll": {
+      "precision": 0.5,
+      "recall": 0.2,
+      "f1": 0.2857142857142857,
+      "support": 5
+    },
+    "Legal & Compliance": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 1
+    },
+    "Marketing & Communications": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 1
+    },
+    "Operations & Procedures": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 0
+    },
+    "Product & Service Documentation": {
+      "precision": 1.0,
+      "recall": 0.2,
+      "f1": 0.3333333333333333,
+      "support": 5
+    },
+    "Quality Management & Audit": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 0
+    },
+    "Research & Analysis": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 0
+    },
+    "Strategy & Corporate Planning": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 1
+    },
+    "Training & Learning Materials": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 1
+    },
+    "unknown": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 0
+    }
+  },
+  "per_l2_metrics": {
+    "Bills & supplier statements": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 3
+    },
+    "Certificates of completion & accreditation records": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 1
+    },
+    "Customer onboarding forms & profiles": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 1
+    },
+    "Customer-facing product brochures & data sheets": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 1
+    },
+    "Employee contracts & offer letters": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 1
+    },
+    "Event plans, agendas & evaluations": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 1
+    },
+    "Investment & treasury reports": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 1
+    },
+    "Invoices (customer invoices, credit notes)": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 3
+    },
+    "M&A, partnership & investment evaluation documents": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 1
+    },
+    "Non-disclosure agreements (NDAs)": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 1
+    },
+    "Occupational health records (anonymised where required)": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 1
+    },
+    "Payroll reports & payslips": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 3
+    },
+    "Product specifications & feature lists": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 3
+    },
+    "Recruitment & interview documents (CVs, interview notes)": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 1
+    },
+    "Tax returns & tax working papers": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 2
+    },
+    "User manuals & quick-start guides": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 1
+    },
+    "unknown": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 0
+    }
+  },
+  "throughput_chars_per_sec": 10005016834.036217,
+  "latency_p50_ms": 0.000100000761449337,
+  "latency_p95_ms": 0.0004400004399940363,
+  "latency_p99_ms": 0.001335998240392653,
+  "gpu_memory_peak_gb": 0.0,
+  "total_samples": 25,
+  "total_time_sec": 4.69998485641554e-06
+}
