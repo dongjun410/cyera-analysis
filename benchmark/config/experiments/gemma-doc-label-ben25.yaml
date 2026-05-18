@@ -1,6 +1,8 @@
+task_type: "classification"
+
 experiment:
   name: "gemma-doc-label-ben25"
-  description: "gemma-doc-label (Gemma4:e2b Ollama) on ben25 document classification"
+  description: "GemmaDocLabelModel (GPU) on ben25 document classification"
 
 model:
   type: "gemma-doc-label"
@@ -10,3 +12,13 @@ model:
 
 dataset:
   type: "ben25"
+  data_root: ""
+
+metrics:
+  - classification_accuracy
+  - throughput_chars_per_sec
+  - latency_p50_p95_p99
+
+output:
+  formats: [terminal, markdown, json]
+  path: "./results/"

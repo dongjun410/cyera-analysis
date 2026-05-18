@@ -31,7 +31,7 @@ DEFAULT_SINGLE_PROMPT = (
 class FlanT5ClassificationModel(FlanT5Model):
     """FLAN-T5 prompt-based document classification model.
 
-    Uses text2text-generation for L1/L2 document label prediction.
+    Uses direct model.generate() for L1/L2 document label prediction.
     """
 
     def __init__(
@@ -49,6 +49,36 @@ class FlanT5ClassificationModel(FlanT5Model):
         )
         self._prompt_style = prompt_style
         self._max_input_chars = max_input_chars
+
+    def _load_pipeline(self):
+        """Override: load T5 model+tokenizer directly (pipeline not supported
+        for T5 in recent transformers text-generation task)."""
+        if self._pipe is not None:
+            return
+        from cyera_bench.models.flan_t5 import _MODEL_MAP
+        from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+        info = _MODEL_MAP[self._variant]
+        model_name = info["hf_name"]
+        self._tokenizer = AutoTokenizer.from_pretrained(model_name)
+        self._model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+        if self._device == "cuda":
+            self._model = self._model.to("cuda")
+        self._pipe = True  # mark as loaded
+
+    def _generate(self, prompts: List[str], max_new_tokens: int) -> List[dict]:
+        import torch
+        device = self._model.device
+        inputs = self._tokenizer(
+            prompts, return_tensors="pt", padding=True, truncation=True,
+            max_length=512,
+        ).to(device)
+        with torch.no_grad():
+            outputs = self._model.generate(
+                **inputs, max_new_tokens=max_new_tokens,
+                pad_token_id=self._tokenizer.pad_token_id or self._tokenizer.eos_token_id,
+            )
+        decoded = self._tokenizer.batch_decode(outputs, skip_special_tokens=True)
+        return [{"generated_text": d.strip()} for d in decoded]
 
     def predict_labels(
         self,
@@ -81,7 +111,7 @@ class FlanT5ClassificationModel(FlanT5Model):
             )
             for t in texts
         ]
-        l1_outputs = self._pipe(prompts_l1, max_new_tokens=32)
+        l1_outputs = self._generate(prompts_l1, max_new_tokens=32)
 
         # Step 2: Predict L2 given L1
         results: List[Dict[str, str]] = []
@@ -108,7 +138,7 @@ class FlanT5ClassificationModel(FlanT5Model):
             results.append({"l1": l1_pred, "l2": ""})
 
         if l2_prompts:
-            l2_outputs = self._pipe(l2_prompts, max_new_tokens=64)
+            l2_outputs = self._generate(l2_prompts, max_new_tokens=64)
             for idx, l2_out in zip(l2_indices, l2_outputs):
                 l1_pred = results[idx]["l1"]
                 l2_pred = l2_out["generated_text"].strip()
@@ -141,7 +171,7 @@ class FlanT5ClassificationModel(FlanT5Model):
             )
             for t in texts
         ]
-        outputs = self._pipe(prompts, max_new_tokens=128)
+        outputs = self._generate(prompts, max_new_tokens=128)
 
         results: List[Dict[str, str]] = []
         for out in outputs:
@@ -150,10 +180,10 @@ class FlanT5ClassificationModel(FlanT5Model):
             l2_pred = ""
             for line in raw.split("\n"):
                 line = line.strip()
-                if line.lower().startswith("l1:") or line.lower().startswith("l1："):
-                    l1_pred = line.split(":", 1)[-1].split("：", 1)[-1].strip()
-                elif line.lower().startswith("l2:") or line.lower().startswith("l2："):
-                    l2_pred = line.split(":", 1)[-1].split("：", 1)[-1].strip()
+                if line.lower().startswith("l1:") or line.lower().startswith("l1"):
+                    l1_pred = line.split(":", 1)[-1].split("", 1)[-1].strip()
+                elif line.lower().startswith("l2:") or line.lower().startswith("l2"):
+                    l2_pred = line.split(":", 1)[-1].split("", 1)[-1].strip()
 
             l1_pred = self._fuzzy_match(l1_pred, l1_options)
             l2_list = l2_options.get(l1_pred, [])
