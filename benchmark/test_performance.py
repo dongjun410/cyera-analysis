@@ -99,27 +99,56 @@ def run_one(model_key: str, dataset_key: str, device: str, model_variant: str | 
     ds = ds_cls()
     texts, labels = ds.load()
     l1_opts, l2_opts = build_label_options(labels)
-    y_true_l1 = [l["l1"] for l in labels]
-    y_true_l2 = [l["l2"] for l in labels]
     print(f"  Documents: {len(texts)}")
 
-    # Load model
+    # Load model class, check if trainable
     model_cls = MODELS[model_key]
     kwargs = {"device": device}
     if model_variant:
         kwargs["variant"] = model_variant
+    is_trainable = hasattr(model_cls, "fit")
+
+    # For trainable models: split data, fit on train, evaluate on test
+    train_size = 0
+    if is_trainable:
+        from sklearn.model_selection import train_test_split
+        y_l1_all = [l["l1"] for l in labels]
+        try:
+            train_texts, eval_texts, train_labels, eval_labels = train_test_split(
+                texts, labels, test_size=0.2, random_state=42,
+                stratify=y_l1_all,
+            )
+        except ValueError:
+            train_texts, eval_texts, train_labels, eval_labels = train_test_split(
+                texts, labels, test_size=0.2, random_state=42,
+            )
+        train_size = len(train_texts)
+        y_true_l1 = [l["l1"] for l in eval_labels]
+        y_true_l2 = [l["l2"] for l in eval_labels]
+        print(f"  Train: {len(train_texts)} docs | Test: {len(eval_texts)} docs")
+    else:
+        eval_texts = texts
+        y_true_l1 = [l["l1"] for l in labels]
+        y_true_l2 = [l["l2"] for l in labels]
+
+    # Load model + fit if trainable
     print(f"  Loading model...")
     model = model_cls(**kwargs)
+    if is_trainable:
+        print(f"  Training on {len(train_texts)} docs...")
+        t_fit_start = time.perf_counter()
+        model.fit(train_texts, train_labels)
+        print(f"  Training complete ({time.perf_counter() - t_fit_start:.1f}s)")
     print(f"  Model: {model.name}")
 
     # Warmup
-    warmup_n = min(3, len(texts))
+    warmup_n = min(3, len(eval_texts))
     print(f"  Warming up ({warmup_n} docs)...")
     warmup_start = time.perf_counter()
     for i in range(warmup_n):
         t0 = time.perf_counter()
         try:
-            model.predict_labels([texts[i]], l1_opts, l2_opts)
+            model.predict_labels([eval_texts[i]], l1_opts, l2_opts)
         except Exception as e:
             print(f"  [WARN] warmup doc {i} error: {e}")
         print(f"  warmup [{i + 1}/{warmup_n}] {time.perf_counter() - t0:.1f}s")
@@ -127,7 +156,7 @@ def run_one(model_key: str, dataset_key: str, device: str, model_variant: str | 
     print(f"  Warmup total: {warmup_total:.1f}s")
 
     # Measure latency + collect predictions
-    n = len(texts)
+    n = len(eval_texts)
     all_latencies: List[float] = []
     y_pred_l1: List[str] = []
     y_pred_l2: List[str] = []
@@ -136,7 +165,7 @@ def run_one(model_key: str, dataset_key: str, device: str, model_variant: str | 
     for i in range(n):
         t0 = time.perf_counter()
         try:
-            preds = model.predict_labels([texts[i]], l1_opts, l2_opts)
+            preds = model.predict_labels([eval_texts[i]], l1_opts, l2_opts)
             y_pred_l1.append(preds[0]["l1"])
             y_pred_l2.append(preds[0]["l2"])
         except Exception as e:
@@ -165,7 +194,7 @@ def run_one(model_key: str, dataset_key: str, device: str, model_variant: str | 
     mn = min(measure_lat)
     mx = max(measure_lat)
     p95 = sorted(measure_lat)[int(len(measure_lat) * 0.95)] if len(measure_lat) > 1 else measure_lat[0]
-    total_chars = sum(len(t) for t in texts[warmup_n:])
+    total_chars = sum(len(t) for t in eval_texts[warmup_n:])
     throughput = total_chars / sum(measure_lat) if sum(measure_lat) > 0 else 0
 
     # Accuracy (all docs)
@@ -203,6 +232,7 @@ def run_one(model_key: str, dataset_key: str, device: str, model_variant: str | 
         "macro_l2_f1": macro_l2_f1,
         "per_l1": acc.get("per_l1", {}),
         "per_l2": acc.get("per_l2", {}),
+        "train_size": train_size,
     })
 
 

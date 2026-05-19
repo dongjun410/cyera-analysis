@@ -7,6 +7,7 @@ DEFAULT_L1_PROMPT = (
     "Classify the following document into exactly one of these categories:\n"
     "{l1_options}\n\n"
     "Document:\n{text}\n\n"
+    "Output ONLY the category name, nothing else.\n"
     "Category:"
 )
 
@@ -15,6 +16,7 @@ DEFAULT_L2_PROMPT = (
     "Choose the most specific subcategory from:\n"
     "{l2_options}\n\n"
     "Document:\n{text}\n\n"
+    "Output ONLY the subcategory name, nothing else.\n"
     "Subcategory:"
 )
 
@@ -24,7 +26,7 @@ DEFAULT_SINGLE_PROMPT = (
     "For each primary category, the available subcategories are:\n"
     "{l1_l2_map}\n\n"
     "Document:\n{text}\n\n"
-    "Output the result as:\nL1: <category>\nL2: <subcategory>"
+    "Output ONLY the result below, nothing else:\nL1: <category>\nL2: <subcategory>"
 )
 
 
@@ -70,7 +72,7 @@ class FlanT5ClassificationModel(FlanT5Model):
         device = self._model.device
         inputs = self._tokenizer(
             prompts, return_tensors="pt", padding=True, truncation=True,
-            max_length=512,
+            max_length=1024,
         ).to(device)
         with torch.no_grad():
             outputs = self._model.generate(
@@ -181,9 +183,9 @@ class FlanT5ClassificationModel(FlanT5Model):
             for line in raw.split("\n"):
                 line = line.strip()
                 if line.lower().startswith("l1:") or line.lower().startswith("l1"):
-                    l1_pred = line.split(":", 1)[-1].split("", 1)[-1].strip()
+                    l1_pred = line.split(":", 1)[-1].strip()
                 elif line.lower().startswith("l2:") or line.lower().startswith("l2"):
-                    l2_pred = line.split(":", 1)[-1].split("", 1)[-1].strip()
+                    l2_pred = line.split(":", 1)[-1].strip()
 
             l1_pred = self._fuzzy_match(l1_pred, l1_options)
             l2_list = l2_options.get(l1_pred, [])
@@ -192,22 +194,44 @@ class FlanT5ClassificationModel(FlanT5Model):
 
         return results
 
+    @staticmethod
+    def _to_snake(text: str) -> str:
+        import re
+        t = text.lower()
+        t = t.replace("&", "and")
+        t = re.sub(r"\([^)]*\)", "", t)
+        t = re.sub(r"[^a-z0-9]+", "_", t)
+        t = t.strip("_")
+        t = re.sub(r"_+", "_", t)
+        return t
+
     def _fuzzy_match(self, prediction: str, candidates: List[str]) -> str:
-        """Match prediction to closest candidate label."""
+        """Match prediction to closest candidate label (snake_case aware)."""
         if not prediction or not candidates:
             return prediction or ""
 
-        pred_lower = prediction.lower().strip().rstrip(".")
+        pred_snake = self._to_snake(prediction)
 
         # Exact match
         for c in candidates:
-            if c.lower() == pred_lower:
+            if c.lower() == prediction.lower().strip():
+                return c
+            if self._to_snake(c) == pred_snake:
                 return c
 
-        # Substring match (prediction is a substring of candidate or vice versa)
+        # Substring match (snake-normalized, min 3 chars)
         for c in candidates:
-            if pred_lower in c.lower() or c.lower() in pred_lower:
+            c_snake = self._to_snake(c)
+            if (len(pred_snake) >= 3 and pred_snake in c_snake) or c_snake in pred_snake:
                 return c
 
-        # If nothing matches, return the prediction as-is (will be marked wrong)
-        return prediction.strip()
+        # Word-level overlap
+        pred_words = set(pred_snake.split("_"))
+        for c in candidates:
+            c_words = set(self._to_snake(c).split("_"))
+            if pred_words & c_words:
+                return c
+
+        # If nothing matches, return "unknown" so it's clearly wrong
+        # rather than passing through an unmatched raw string
+        return "unknown"
