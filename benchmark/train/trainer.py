@@ -56,7 +56,7 @@ def setup_model_and_tokenizer(cfg: TrainingConfig):
         cfg.model_name,
         quantization_config=bnb_config,
         device_map="auto",
-        torch_dtype=torch.float16 if cfg.quantization is None else None,
+        dtype=torch.float16 if cfg.quantization is None else None,
     )
 
     lora_config = _build_lora_config(cfg)
@@ -154,7 +154,7 @@ def train_phase2(
         cfg.model_name,
         quantization_config=bnb_config,
         device_map="auto",
-        torch_dtype=torch.float16 if cfg.quantization is None else None,
+        dtype=torch.float16 if cfg.quantization is None else None,
     )
 
     phase1_path = os.path.join(cfg.output_dir, "phase1_adapter")

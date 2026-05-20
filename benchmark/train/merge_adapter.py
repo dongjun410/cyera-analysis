@@ -25,7 +25,7 @@ def merge_and_save(cfg: TrainingConfig) -> str:
     print(f"Loading base model: {cfg.model_name}")
     base_model = AutoModelForSeq2SeqLM.from_pretrained(
         cfg.model_name,
-        torch_dtype=torch.float16,
+        dtype=torch.float16,
         device_map="auto",
     )
 

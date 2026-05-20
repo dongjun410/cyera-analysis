@@ -330,13 +330,12 @@ def tokenize_dataset(
             truncation=True,
             padding=False,
         )
-        with tokenizer.as_target_tokenizer():
-            targets = tokenizer(
-                examples["target"],
-                max_length=max_target_length,
-                truncation=True,
-                padding=False,
-            )
+        targets = tokenizer(
+            examples["target"],
+            max_length=max_target_length,
+            truncation=True,
+            padding=False,
+        )
         inputs["labels"] = targets["input_ids"]
         return inputs
 

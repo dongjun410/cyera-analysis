@@ -1,0 +1,54 @@
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+W0520 13:47:39.978000 14628 site-packages\torch\utils\flop_counter.py:29] triton not found; flop counting will not work for triton kernels
+Loaded config from benchmark\config\experiments\flan-t5-finetune.yaml
+  Model: google/flan-t5-large
+  Quantization: 8bit
+  LoRA: r=16, alpha=32
+  Output: benchmark/models/flan-t5-finetuned
+============================================================
+PHASE 1: General Classification Training
+============================================================
+Loading weights:   0%|          | 0/558 [00:00<?, ?it/s]Loading weights:   9%|¨         | 51/558 [00:00<00:01, 504.90it/s]Loading weights:  18%|¨€¨‚        | 102/558 [00:00<00:00, 507.41it/s]Loading weights:  28%|¨€¨€¨‚       | 157/558 [00:00<00:00, 523.69it/s]Loading weights:  38%|¨€¨€¨€¨‚      | 210/558 [00:00<00:00, 523.83it/s]Loading weights:  47%|¨€¨€¨€¨€¨ƒ     | 264/558 [00:00<00:00, 528.67it/s]Loading weights:  57%|¨€¨€¨€¨€¨€¨ƒ    | 317/558 [00:00<00:00, 528.21it/s]Loading weights:  66%|¨€¨€¨€¨€¨€¨€¨ƒ   | 370/558 [00:00<00:00, 518.24it/s]Loading weights:  76%|¨€¨€¨€¨€¨€¨€¨€¨„  | 422/558 [00:00<00:00, 492.56it/s]Loading weights:  85%|¨€¨€¨€¨€¨€¨€¨€¨€¨… | 472/558 [00:00<00:00, 481.13it/s]Loading weights:  93%|¨€¨€¨€¨€¨€¨€¨€¨€¨€¨†| 521/558 [00:01<00:00, 479.83it/s]Loading weights: 100%|¨€¨€¨€¨€¨€¨€¨€¨€¨€¨€| 558/558 [00:01<00:00, 472.20it/s]
+[transformers] The tied weights mapping and config for this model specifies to tie shared.weight to lm_head.weight, but both are present in the checkpoints with different values, so we will NOT tie them. You should update the config with `tie_word_embeddings=False` to silence this warning.
+Repo card metadata block was not found. Setting CardData to empty.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+trainable params: 18,284,544 || all params: 801,434,624 || trainable%: 2.2815
+  ledgar: subsampled to 15663 (weight=0.123)
+  ag_news: subsampled to 11075 (weight=0.087)
+  dbpedia: subsampled to 16213 (weight=0.128)
+Map:   0%|          | 0/60695 [00:00<?, ? examples/s]Map:   0%|          | 0/60695 [00:00<?, ? examples/s]
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\31531\Desktop\AI\cyera-analysis\benchmark\scripts\run_finetune.py", line 125, in <module>
+    main()
+  File "C:\Users\31531\Desktop\AI\cyera-analysis\benchmark\scripts\run_finetune.py", line 94, in main
+    model = train_phase1(cfg)
+            ^^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\Desktop\AI\cyera-analysis\benchmark\train\trainer.py", line 78, in train_phase1
+    dataset = tokenize_dataset(
+              ^^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\Desktop\AI\cyera-analysis\benchmark\train\data_pipeline.py", line 343, in tokenize_dataset
+    return dataset.map(_tokenize, batched=True, remove_columns=dataset.column_names)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\datasets\arrow_dataset.py", line 575, in wrapper
+    out: Union["Dataset", "DatasetDict"] = func(self, *args, **kwargs)
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\datasets\arrow_dataset.py", line 3633, in map
+    for rank, done, content in Dataset._map_single(**unprocessed_kwargs):
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\datasets\arrow_dataset.py", line 3998, in _map_single
+    for i, batch in iter_outputs(shard_iterable):
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\datasets\arrow_dataset.py", line 3951, in iter_outputs
+    yield i, apply_function(example, i, offset=offset)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\datasets\arrow_dataset.py", line 3872, in apply_function
+    processed_inputs = function(*fn_args, *additional_args, **fn_kwargs)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\Desktop\AI\cyera-analysis\benchmark\train\data_pipeline.py", line 333, in _tokenize
+    with tokenizer.as_target_tokenizer():
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\transformers\tokenization_utils_base.py", line 1315, in __getattr__
+    raise AttributeError(f"{self.__class__.__name__} has no attribute {key}")
+AttributeError: T5Tokenizer has no attribute as_target_tokenizer
