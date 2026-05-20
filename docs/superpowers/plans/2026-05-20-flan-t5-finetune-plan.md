@@ -1761,3 +1761,45 @@ Expected: All tests PASS (1 SKIP for back_translation if Helsinki models not dow
 git add -A
 git commit -m "chore: verify all modules import correctly and tests pass"
 ```
+
+---
+
+## Post-Implementation Notes (2026-05-21)
+
+The following deviations from the plan were required during actual training on RTX 5070 (12GB):
+
+### VRAM Constraints (Critical)
+
+| Plan | Actual | Reason |
+|------|--------|--------|
+| 8-bit quantization | **4-bit NF4** | 8-bit OOM'd at batch=6 even with gradient checkpointing |
+| No gradient checkpointing | **Enabled** | T5 encoder-decoder activations at seq_len≥512 exceed 12GB without ckpt |
+| batch_size=8, accum=2 | **batch=6, accum=3** | Reduced after 7 config iterations to find VRAM-stable config |
+| max_length=1024 | **max_length=768** | Reduced to lower activation memory |
+| Est. 4-5h Phase 1 | **~9.5h actual** | Gradient checkpointing + smaller batch slowed per-step time |
+
+Empirically determined optimal config: **4-bit NF4 + batch=6 + grad ckpt + max_length=768**.
+
+### Transformers 5.x API Changes
+
+| Plan Code | Actual Code | Affected Lines |
+|-----------|-------------|----------------|
+| `with tokenizer.as_target_tokenizer():` | Direct tokenization (removed in 5.x) | data_pipeline.py tokenize_dataset() |
+| `torch_dtype=torch.float16` | `dtype=torch.float16` (deprecated) | trainer.py, merge_adapter.py |
+| `warmup_ratio=0.1` | `warmup_steps=<computed>` (deprecated) | trainer.py |
+| `tokenizer=tokenizer` in Seq2SeqTrainer | `processing_class=tokenizer` (renamed) | trainer.py |
+
+### Dataset Schema Differences
+
+| Dataset | Plan Field | Actual Field |
+|---------|-----------|--------------|
+| DBpedia-14 | `item["text"]` | `item["content"]` |
+| German-MultiFin | `item["text"]` / `item["label"]` | `item["ger_text"]` / `item["highlev_label"]` |
+
+### Augmentation During Training
+
+LLM synthesis (Layer 3) was not executed during the actual training run because Gemma4/Ollama was not running. Only entity substitution and back-translation were applied. Despite this, the Phase 1 foundation training provided sufficient classification capability that Phase 2 adaptation was effective.
+
+### Benchmark Accuracy — All Targets Exceeded
+
+Average L1 improvement: +29.6pp (target was +10-25pp). The 780M fine-tuned model outperforms Gemma4 2B zero-shot on 5/6 datasets. See `benchmark/results/finetune-eval-2026-05-21_030000.md` for full comparison.
