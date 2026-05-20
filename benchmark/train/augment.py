@@ -6,6 +6,7 @@ import re
 from typing import Dict, List, Optional
 
 import numpy as np
+from benchmark.train.config import TrainingConfig
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -269,7 +270,24 @@ class Augmenter:
             pass  # Helsinki NLP not available
 
         # Layer 3: LLM synthesis (optional, requires Gemma4 running)
-        # Skipped if taxonomy_defs not provided
+        if taxonomy_defs:
+            for text, label in zip(texts, labels):
+                l1 = label["l1"]
+                l2 = label.get("l2", "")
+                tax_def = taxonomy_defs.get(l1, "")
+                try:
+                    synthetic = llm_synthesize(
+                        l1_label=l1,
+                        l2_label=l2,
+                        taxonomy_def=tax_def,
+                        n=max(1, self.cfg.augment_llm_synthesis_count // max(1, len(texts))),
+                    )
+                    for syn_text in synthetic:
+                        if syn_text.strip():
+                            all_texts.append(syn_text)
+                            all_labels.append(label.copy())
+                except Exception:
+                    continue
 
         # Quality filter on augmented portion only
         n_original = len(texts)
