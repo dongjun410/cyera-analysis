@@ -3,11 +3,9 @@ from __future__ import annotations
 
 import math
 import random
-from typing import Dict, List, Optional, Tuple
+from typing import List, Tuple
 
 from datasets import Dataset as HFDataset
-from torch.utils.data import DataLoader
-
 from benchmark.train.config import TrainingConfig
 
 
@@ -68,7 +66,7 @@ TEMPLATES = {
 class TemplateEngine:
     """Applies FLAN-style instruction templates to classification samples."""
 
-    def __init__(self, seed: int = 42, template_ratios: Dict[str, float] | None = None):
+    def __init__(self, seed: int = 42, template_ratios: dict[str, float] | None = None):
         self.rng = random.Random(seed)
         if template_ratios:
             total = sum(template_ratios.values())
@@ -90,9 +88,9 @@ class TemplateEngine:
         template_name: str,
         text: str,
         l1_options: List[str],
-        label: Dict[str, str],
+        label: dict[str, str],
         example_pool: List[Tuple[str, str]] | None = None,
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         """Apply a template to a single sample. Returns {"input": ..., "target": ...}."""
         l1_str = self._format_l1_options(l1_options)
         l1_label = label.get("l1", l1_options[0] if l1_options else "")
@@ -125,6 +123,8 @@ class TemplateEngine:
             wrong = l1_label
             while wrong == l1_label and len(l1_options) > 1:
                 wrong = self.rng.choice(l1_options)
+            if wrong == l1_label:
+                wrong = "another category"
             prompt = TEMPLATE_CONTRASTIVE.format(
                 text=text, l1_options=l1_str,
                 wrong_label=wrong, correct_label=l1_label,
@@ -144,7 +144,7 @@ class TemplateEngine:
         return "\n".join(lines)
 
 
-def compute_sampling_weights(dataset_sizes: Dict[str, int]) -> Dict[str, float]:
+def compute_sampling_weights(dataset_sizes: dict[str, int]) -> dict[str, float]:
     """Compute anti-dominance weights: 1/sqrt(N_i), normalized to sum to 1."""
     raw = {name: 1.0 / math.sqrt(size) for name, size in dataset_sizes.items()}
     total = sum(raw.values())
@@ -153,7 +153,7 @@ def compute_sampling_weights(dataset_sizes: Dict[str, int]) -> Dict[str, float]:
 
 # --- Dataset Loaders ---
 
-def _load_20newsgroups() -> Tuple[List[str], List[Dict[str, str]], List[str]]:
+def _load_20newsgroups() -> Tuple[List[str], List[dict[str, str]], List[str]]:
     from datasets import load_dataset
     ds = load_dataset("SetFit/20_newsgroups", split="train")
     texts = [item["text"] for item in ds]
@@ -162,7 +162,7 @@ def _load_20newsgroups() -> Tuple[List[str], List[Dict[str, str]], List[str]]:
     return texts, labels, l1_options
 
 
-def _load_ledgar() -> Tuple[List[str], List[Dict[str, str]], List[str]]:
+def _load_ledgar() -> Tuple[List[str], List[dict[str, str]], List[str]]:
     from datasets import load_dataset
     ds = load_dataset("lex_glue", "ledgar", split="train")
     texts = [item["text"] for item in ds]
@@ -171,7 +171,7 @@ def _load_ledgar() -> Tuple[List[str], List[Dict[str, str]], List[str]]:
     return texts, labels, l1_options
 
 
-def _load_ag_news() -> Tuple[List[str], List[Dict[str, str]], List[str]]:
+def _load_ag_news() -> Tuple[List[str], List[dict[str, str]], List[str]]:
     from datasets import load_dataset
     ds = load_dataset("ag_news", split="train")
     label_names = {0: "World", 1: "Sports", 2: "Business", 3: "Science/Tech"}
@@ -181,7 +181,7 @@ def _load_ag_news() -> Tuple[List[str], List[Dict[str, str]], List[str]]:
     return texts, labels, l1_options
 
 
-def _load_dbpedia(cfg: TrainingConfig) -> Tuple[List[str], List[Dict[str, str]], List[str]]:
+def _load_dbpedia(cfg: TrainingConfig) -> Tuple[List[str], List[dict[str, str]], List[str]]:
     from datasets import load_dataset
     ds = load_dataset("dbpedia_14", split="train")
     n_total = len(ds)
@@ -200,11 +200,11 @@ def _load_dbpedia(cfg: TrainingConfig) -> Tuple[List[str], List[Dict[str, str]],
     return texts, labels, l1_options
 
 
-def _load_german_multifin() -> Tuple[List[str], List[Dict[str, str]], List[str]]:
+def _load_german_multifin() -> Tuple[List[str], List[dict[str, str]], List[str]]:
     from datasets import load_dataset
     ds = load_dataset("anhaltai/german-multifin", split="train")
     texts: List[str] = []
-    labels: List[Dict[str, str]] = []
+    labels: List[dict[str, str]] = []
     for item in ds:
         text_val = item.get("text", "") or item.get("sentence", "") or ""
         if not text_val:
@@ -232,11 +232,11 @@ def build_phase1_dataset(cfg: TrainingConfig) -> HFDataset:
     """Load all Phase 1 datasets, apply templates with sampling weights,
     return a single HF Dataset ready for Seq2SeqTrainer."""
     engine = TemplateEngine(seed=cfg.seed, template_ratios=cfg.template_ratios)
-    all_records: List[Dict[str, str]] = []
-    dataset_sizes: Dict[str, int] = {}
+    all_records: List[dict[str, str]] = []
+    dataset_sizes: dict[str, int] = {}
 
     # First pass: load everything and compute sizes
-    all_loaded: Dict[str, tuple] = {}
+    all_loaded: dict[str, tuple] = {}
     for name, loader_fn in _DATASET_LOADERS.items():
         texts, labels, l1_options = loader_fn(cfg) if name == "dbpedia" else loader_fn()
         dataset_sizes[name] = len(texts)
@@ -283,13 +283,13 @@ def build_phase1_dataset(cfg: TrainingConfig) -> HFDataset:
 
 def build_phase2_dataset(
     texts: List[str],
-    labels: List[Dict[str, str]],
+    labels: List[dict[str, str]],
     l1_options: List[str],
     cfg: TrainingConfig,
 ) -> HFDataset:
     """Build a dataset from DSPM texts+labels with template application."""
     engine = TemplateEngine(seed=cfg.seed, template_ratios=cfg.template_ratios)
-    records: List[Dict[str, str]] = []
+    records: List[dict[str, str]] = []
 
     example_pool = [
         (texts[i][:200], labels[i]["l1"])

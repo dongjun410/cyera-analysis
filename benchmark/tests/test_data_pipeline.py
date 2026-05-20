@@ -3,10 +3,8 @@ import pytest
 from benchmark.train.data_pipeline import (
     TemplateEngine,
     TEMPLATES,
-    build_phase1_dataset,
     compute_sampling_weights,
 )
-from benchmark.train.config import TrainingConfig
 
 
 SAMPLE_TEXT = "The board of directors approved the annual budget for fiscal year 2024."
