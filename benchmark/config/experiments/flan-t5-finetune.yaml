@@ -10,8 +10,8 @@ lora_dropout: 0.05
 
 phase1_epochs: 3
 phase1_lr: 0.0002
-phase1_batch_size: 4
-phase1_grad_accum: 4
+phase1_batch_size: 6
+phase1_grad_accum: 3
 phase1_max_length: 768
 phase1_max_target_length: 128
 phase1_warmup_ratio: 0.1
