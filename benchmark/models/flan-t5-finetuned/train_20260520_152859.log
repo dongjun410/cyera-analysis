@@ -1,0 +1,126 @@
+W0520 15:29:06.788000 10732 site-packages\torch\utils\flop_counter.py:29] triton not found; flop counting will not work for triton kernels
+Loaded config from benchmark\config\experiments\flan-t5-finetune.yaml
+  Model: google/flan-t5-large
+  Quantization: 4bit
+  LoRA: r=16, alpha=32
+  Output: benchmark/models/flan-t5-finetuned
+============================================================
+PHASE 1: General Classification Training
+============================================================
+Loading weights:   0%|          | 0/558 [00:00<?, ?it/s]C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\bitsandbytes\backends\cuda\ops.py:213: FutureWarning: _check_is_size will be removed in a future PyTorch release along with guard_size_oblivious.     Use _check(i >= 0) instead.
+  torch._check_is_size(blocksize)
+Loading weights:   7%|¨ƒ         | 41/558 [00:00<00:01, 397.98it/s]Loading weights:  18%|¨€¨‚        | 103/558 [00:00<00:00, 522.37it/s]Loading weights:  30%|¨€¨€¨       | 166/558 [00:00<00:00, 567.10it/s]Loading weights:  41%|¨€¨€¨€¨€      | 226/558 [00:00<00:00, 576.25it/s]Loading weights:  53%|¨€¨€¨€¨€¨€¨†    | 294/558 [00:00<00:00, 607.81it/s]Loading weights:  64%|¨€¨€¨€¨€¨€¨€¨…   | 358/558 [00:00<00:00, 617.56it/s]Loading weights:  75%|¨€¨€¨€¨€¨€¨€¨€¨„  | 420/558 [00:00<00:00, 588.79it/s]Loading weights:  86%|¨€¨€¨€¨€¨€¨€¨€¨€¨„ | 480/558 [00:00<00:00, 584.16it/s]Loading weights:  97%|¨€¨€¨€¨€¨€¨€¨€¨€¨€¨ƒ| 541/558 [00:00<00:00, 591.01it/s]Loading weights: 100%|¨€¨€¨€¨€¨€¨€¨€¨€¨€¨€| 558/558 [00:01<00:00, 545.06it/s]
+[transformers] The tied weights mapping and config for this model specifies to tie shared.weight to lm_head.weight, but both are present in the checkpoints with different values, so we will NOT tie them. You should update the config with `tie_word_embeddings=False` to silence this warning.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Repo card metadata block was not found. Setting CardData to empty.
+trainable params: 18,284,544 || all params: 801,434,624 || trainable%: 2.2815
+  ledgar: subsampled to 15663 (weight=0.123)
+  ag_news: subsampled to 11075 (weight=0.087)
+  dbpedia: subsampled to 16213 (weight=0.128)
+Map:   0%|          | 0/60695 [00:00<?, ? examples/s]Map:   2%|¨‡         | 1000/60695 [00:00<00:11, 5037.13 examples/s]Map:   3%|¨†         | 2000/60695 [00:00<00:09, 5963.67 examples/s]Map:   5%|¨…         | 3000/60695 [00:00<00:09, 6393.01 examples/s]Map:   7%|¨ƒ         | 4000/60695 [00:00<00:08, 6348.76 examples/s]Map:   8%|¨‚         | 5000/60695 [00:00<00:08, 6269.62 examples/s]Map:  10%|¨         | 6000/60695 [00:00<00:08, 6637.33 examples/s]Map:  12%|¨€¨‡        | 7000/60695 [00:01<00:08, 6639.34 examples/s]Map:  13%|¨€¨†        | 8000/60695 [00:01<00:07, 6697.43 examples/s]Map:  15%|¨€¨…        | 9000/60695 [00:01<00:07, 6708.47 examples/s]Map:  16%|¨€¨ƒ        | 10000/60695 [00:01<00:07, 6653.84 examples/s]Map:  18%|¨€¨‚        | 11000/60695 [00:01<00:07, 6784.34 examples/s]Map:  20%|¨€¨        | 12000/60695 [00:02<00:09, 4872.40 examples/s]Map:  21%|¨€¨€¨‡       | 13000/60695 [00:02<00:08, 5347.72 examples/s]Map:  23%|¨€¨€¨†       | 14000/60695 [00:02<00:08, 5741.73 examples/s]Map:  25%|¨€¨€¨…       | 15000/60695 [00:02<00:07, 6002.99 examples/s]Map:  26%|¨€¨€¨ƒ       | 16000/60695 [00:02<00:07, 6240.35 examples/s]Map:  28%|¨€¨€¨‚       | 17000/60695 [00:02<00:06, 6362.46 examples/s]Map:  30%|¨€¨€¨       | 18000/60695 [00:02<00:06, 6463.24 examples/s]Map:  31%|¨€¨€¨€¨‡      | 19000/60695 [00:03<00:06, 6578.36 examples/s]Map:  33%|¨€¨€¨€¨†      | 20000/60695 [00:03<00:06, 6629.29 examples/s]Map:  35%|¨€¨€¨€¨…      | 21000/60695 [00:03<00:05, 6660.16 examples/s]Map:  36%|¨€¨€¨€¨„      | 22000/60695 [00:03<00:05, 6762.13 examples/s]Map:  38%|¨€¨€¨€¨‚      | 23000/60695 [00:03<00:05, 6780.01 examples/s]Map:  40%|¨€¨€¨€¨      | 24000/60695 [00:03<00:05, 6841.78 examples/s]Map:  41%|¨€¨€¨€¨€      | 25000/60695 [00:03<00:05, 6780.78 examples/s]Map:  43%|¨€¨€¨€¨€¨†     | 26000/60695 [00:04<00:05, 6821.27 examples/s]Map:  44%|¨€¨€¨€¨€¨…     | 27000/60695 [00:04<00:05, 6658.92 examples/s]Map:  49%|¨€¨€¨€¨€¨     | 30000/60695 [00:04<00:02, 10703.76 examples/s]Map:  53%|¨€¨€¨€¨€¨€¨†    | 32000/60695 [00:04<00:03, 8995.98 examples/s] Map:  59%|¨€¨€¨€¨€¨€¨    | 36000/60695 [00:04<00:01, 12478.47 examples/s]Map:  64%|¨€¨€¨€¨€¨€¨€¨…   | 39000/60695 [00:05<00:01, 14149.03 examples/s]Map:  68%|¨€¨€¨€¨€¨€¨€¨‚   | 41000/60695 [00:05<00:01, 14594.91 examples/s]Map:  71%|¨€¨€¨€¨€¨€¨€¨€   | 43000/60695 [00:05<00:01, 14978.59 examples/s]Map:  74%|¨€¨€¨€¨€¨€¨€¨€¨…  | 45000/60695 [00:05<00:01, 15305.37 examples/s]Map:  77%|¨€¨€¨€¨€¨€¨€¨€¨ƒ  | 47000/60695 [00:05<00:00, 15493.47 examples/s]Map:  81%|¨€¨€¨€¨€¨€¨€¨€¨€  | 49000/60695 [00:05<00:00, 15616.03 examples/s]Map:  84%|¨€¨€¨€¨€¨€¨€¨€¨€¨… | 51000/60695 [00:05<00:00, 15723.45 examples/s]Map:  87%|¨€¨€¨€¨€¨€¨€¨€¨€¨ƒ | 53000/60695 [00:06<00:00, 10842.84 examples/s]Map:  92%|¨€¨€¨€¨€¨€¨€¨€¨€¨€¨‡| 56000/60695 [00:06<00:00, 13314.33 examples/s]Map:  99%|¨€¨€¨€¨€¨€¨€¨€¨€¨€¨| 60000/60695 [00:06<00:00, 16957.44 examples/s]Map: 100%|¨€¨€¨€¨€¨€¨€¨€¨€¨€¨€| 60695/60695 [00:06<00:00, 9466.47 examples/s] 
+  0%|          | 0/9612 [00:00<?, ?it/s][W520 15:30:19.000000000 CUDACachingAllocator.cpp:3771] memory allocation failed with OOM on device 0 while trying to allocate 18874368 bytes (free: 0, total: 12820480000).
+[W520 15:30:19.000000000 CUDACachingAllocator.cpp:3771] memory allocation failed with OOM on device 0 while trying to allocate 18874368 bytes (free: 0, total: 12820480000).
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\31531\Desktop\AI\cyera-analysis\benchmark\scripts\run_finetune.py", line 125, in <module>
+    main()
+  File "C:\Users\31531\Desktop\AI\cyera-analysis\benchmark\scripts\run_finetune.py", line 94, in main
+    model = train_phase1(cfg)
+            ^^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\Desktop\AI\cyera-analysis\benchmark\train\trainer.py", line 135, in train_phase1
+    trainer.train()
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\transformers\trainer.py", line 1427, in train
+    return inner_training_loop(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\transformers\trainer.py", line 1509, in _inner_training_loop
+    self._run_epoch(
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\transformers\trainer.py", line 1737, in _run_epoch
+    tr_loss_step = self.training_step(model, inputs, num_items_in_batch)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\transformers\trainer.py", line 1909, in training_step
+    loss = self.compute_loss(model, inputs, num_items_in_batch=num_items_in_batch)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\transformers\trainer.py", line 1981, in compute_loss
+    outputs = model(**inputs)
+              ^^^^^^^^^^^^^^^
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\nn\modules\module.py", line 1778, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\nn\modules\module.py", line 1789, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\peft\peft_model.py", line 2342, in forward
+    return self.base_model(
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\nn\modules\module.py", line 1778, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\nn\modules\module.py", line 1789, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\peft\tuners\tuners_utils.py", line 330, in forward
+    return self.model.forward(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\transformers\models\t5\modeling_t5.py", line 1057, in forward
+    encoder_outputs = self.encoder(
+                      ^^^^^^^^^^^^^
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\nn\modules\module.py", line 1778, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\nn\modules\module.py", line 1789, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\transformers\models\t5\modeling_t5.py", line 727, in forward
+    layer_outputs = layer_module(
+                    ^^^^^^^^^^^^^
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\transformers\modeling_layers.py", line 93, in __call__
+    return super().__call__(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\nn\modules\module.py", line 1778, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\nn\modules\module.py", line 1789, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\transformers\models\t5\modeling_t5.py", line 425, in forward
+    self_attention_outputs = self.layer[0](
+                             ^^^^^^^^^^^^^^
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\nn\modules\module.py", line 1778, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\nn\modules\module.py", line 1789, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\transformers\models\t5\modeling_t5.py", line 354, in forward
+    attention_output = self.SelfAttention(
+                       ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\nn\modules\module.py", line 1778, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\nn\modules\module.py", line 1789, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\transformers\models\t5\modeling_t5.py", line 325, in forward
+    attn_output = self.o(attn_output)
+                  ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\nn\modules\module.py", line 1778, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\nn\modules\module.py", line 1789, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\peft\tuners\lora\bnb.py", line 523, in forward
+    result = self.base_layer(x, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\nn\modules\module.py", line 1778, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\nn\modules\module.py", line 1789, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\AppData\Local\Programs\Python\Python312\Lib\site-packages\bitsandbytes\nn\modules.py", line 556, in forward
+    return bnb.matmul_4bit(x, weight, bias=bias, quant_state=quant_state).to(inp_dtype)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 18.00 MiB. GPU 0 has a total capacity of 11.94 GiB of which 0 bytes is free. Of the allocated memory 25.81 GiB is allocated by PyTorch, and 149.40 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://docs.pytorch.org/docs/stable/notes/cuda.html#optimizing-memory-usage-with-pytorch-cuda-alloc-conf)
+  0%|          | 0/9612 [00:40<?, ?it/s]
