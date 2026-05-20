@@ -10,19 +10,19 @@ lora_dropout: 0.05
 
 phase1_epochs: 3
 phase1_lr: 0.0002
-phase1_batch_size: 8
-phase1_grad_accum: 2
-phase1_max_length: 1024
+phase1_batch_size: 2
+phase1_grad_accum: 8
+phase1_max_length: 768
 phase1_max_target_length: 128
 phase1_warmup_ratio: 0.1
 phase1_weight_decay: 0.01
 
 phase2_epochs: 12
 phase2_lr: 0.00005
-phase2_batch_size: 4
-phase2_grad_accum: 2
+phase2_batch_size: 1
+phase2_grad_accum: 8
 phase2_lora_dropout: 0.10
-phase2_max_length: 1024
+phase2_max_length: 768
 phase2_max_target_length: 128
 phase2_warmup_ratio: 0.1
 phase2_weight_decay: 0.01

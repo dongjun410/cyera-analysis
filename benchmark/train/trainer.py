@@ -61,6 +61,7 @@ def setup_model_and_tokenizer(cfg: TrainingConfig):
 
     lora_config = _build_lora_config(cfg)
     model = get_peft_model(model, lora_config)
+    model.gradient_checkpointing_enable()
     model.print_trainable_parameters()
 
     return model, tokenizer
