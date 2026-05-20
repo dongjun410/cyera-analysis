@@ -3,9 +3,7 @@ from __future__ import annotations
 
 import random
 import re
-from typing import Dict, List, Optional
-
-import numpy as np
+from typing import Dict, List
 from benchmark.train.config import TrainingConfig
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -233,6 +231,7 @@ class Augmenter:
 
     def __init__(self, config: TrainingConfig):
         self.cfg = config
+        random.seed(config.seed)
         self._bt_langs = ["de", "zh", "fr"]
 
     def augment(
@@ -253,21 +252,16 @@ class Augmenter:
                 all_labels.append(label.copy())
 
         # Layer 2: Back-translation (Helsinki NLP, lazy-loaded in back_translate function)
-        # Only attempt if importable
-        try:
-            from benchmark.train.augment import back_translate  # noqa: F811
-            for i in range(min(self.cfg.augment_back_translation_count, len(self._bt_langs))):
-                lang = self._bt_langs[i]
-                for text, label in zip(texts, labels):
-                    try:
-                        bt_text = back_translate(text, target_lang=lang)
-                        if bt_text != text:
-                            all_texts.append(bt_text)
-                            all_labels.append(label.copy())
-                    except Exception:
-                        continue
-        except ImportError:
-            pass  # Helsinki NLP not available
+        for i in range(min(self.cfg.augment_back_translation_count, len(self._bt_langs))):
+            lang = self._bt_langs[i]
+            for text, label in zip(texts, labels):
+                try:
+                    bt_text = back_translate(text, target_lang=lang)
+                    if bt_text != text:
+                        all_texts.append(bt_text)
+                        all_labels.append(label.copy())
+                except Exception:
+                    continue
 
         # Layer 3: LLM synthesis (optional, requires Gemma4 running)
         if taxonomy_defs:

@@ -1,5 +1,4 @@
 # benchmark/tests/test_augment.py
-import pytest
 from benchmark.train.augment import (
     entity_substitution,
     tfidf_quality_filter,
@@ -15,6 +14,8 @@ SAMPLE_DOC = (
 
 
 def test_entity_substitution_changes_entities():
+    import random
+    random.seed(42)
     doc = SAMPLE_DOC
     variants = [entity_substitution(doc) for _ in range(5)]
     for v in variants:
