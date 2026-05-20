@@ -91,6 +91,11 @@ def train_phase1(cfg: TrainingConfig) -> PeftModel:
         tokenizer, model=model, padding=True,
     )
 
+    # Compute warmup steps from ratio (warmup_ratio deprecated in transformers 5.x)
+    effective_batch = cfg.phase1_batch_size * cfg.phase1_grad_accum
+    steps_per_epoch = max(1, len(train_ds) // effective_batch)
+    warmup_steps = int(steps_per_epoch * cfg.phase1_epochs * cfg.phase1_warmup_ratio)
+
     training_args = Seq2SeqTrainingArguments(
         output_dir=os.path.join(cfg.output_dir, "phase1_checkpoints"),
         per_device_train_batch_size=cfg.phase1_batch_size,
@@ -99,7 +104,7 @@ def train_phase1(cfg: TrainingConfig) -> PeftModel:
         num_train_epochs=cfg.phase1_epochs,
         learning_rate=cfg.phase1_lr,
         lr_scheduler_type="cosine",
-        warmup_ratio=cfg.phase1_warmup_ratio,
+        warmup_steps=warmup_steps,
         weight_decay=cfg.phase1_weight_decay,
         optim="adamw_torch",
         logging_steps=50,
@@ -124,7 +129,7 @@ def train_phase1(cfg: TrainingConfig) -> PeftModel:
         train_dataset=train_ds,
         eval_dataset=val_ds,
         data_collator=data_collator,
-        tokenizer=tokenizer,
+        processing_class=tokenizer,
     )
 
     trainer.train()
@@ -186,6 +191,11 @@ def train_phase2(
         tokenizer, model=model, padding=True,
     )
 
+    # Compute warmup steps from ratio
+    effective_batch = cfg.phase2_batch_size * cfg.phase2_grad_accum
+    steps_per_epoch = max(1, len(train_ds) // effective_batch)
+    warmup_steps = int(steps_per_epoch * cfg.phase2_epochs * cfg.phase2_warmup_ratio)
+
     training_args = Seq2SeqTrainingArguments(
         output_dir=os.path.join(cfg.output_dir, "phase2_checkpoints"),
         per_device_train_batch_size=cfg.phase2_batch_size,
@@ -194,7 +204,7 @@ def train_phase2(
         num_train_epochs=cfg.phase2_epochs,
         learning_rate=cfg.phase2_lr,
         lr_scheduler_type="cosine",
-        warmup_ratio=cfg.phase2_warmup_ratio,
+        warmup_steps=warmup_steps,
         weight_decay=cfg.phase2_weight_decay,
         optim="adamw_torch",
         logging_steps=10,
@@ -217,7 +227,7 @@ def train_phase2(
         train_dataset=train_ds,
         eval_dataset=val_ds,
         data_collator=data_collator,
-        tokenizer=tokenizer,
+        processing_class=tokenizer,
         callbacks=[EarlyStoppingCallback(
             early_stopping_patience=cfg.phase2_early_stopping_patience,
         )],

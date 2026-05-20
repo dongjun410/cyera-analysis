@@ -1,0 +1,31 @@
+W0520 14:01:11.760000 13148 site-packages\torch\utils\flop_counter.py:29] triton not found; flop counting will not work for triton kernels
+Loaded config from benchmark\config\experiments\flan-t5-finetune.yaml
+  Model: google/flan-t5-large
+  Quantization: 8bit
+  LoRA: r=16, alpha=32
+  Output: benchmark/models/flan-t5-finetuned
+============================================================
+PHASE 1: General Classification Training
+============================================================
+Loading weights:   0%|          | 0/558 [00:00<?, ?it/s]Loading weights:   9%|¨         | 51/558 [00:00<00:00, 507.42it/s]Loading weights:  18%|¨€¨‚        | 102/558 [00:00<00:00, 507.19it/s]Loading weights:  27%|¨€¨€¨ƒ       | 153/558 [00:00<00:00, 504.98it/s]Loading weights:  37%|¨€¨€¨€¨ƒ      | 208/558 [00:00<00:00, 515.54it/s]Loading weights:  47%|¨€¨€¨€¨€¨ƒ     | 264/558 [00:00<00:00, 524.81it/s]Loading weights:  57%|¨€¨€¨€¨€¨€¨ƒ    | 318/558 [00:00<00:00, 528.99it/s]Loading weights:  66%|¨€¨€¨€¨€¨€¨€¨ƒ   | 371/558 [00:00<00:00, 517.79it/s]Loading weights:  76%|¨€¨€¨€¨€¨€¨€¨€¨„  | 423/558 [00:00<00:00, 491.71it/s]Loading weights:  85%|¨€¨€¨€¨€¨€¨€¨€¨€¨… | 473/558 [00:00<00:00, 467.69it/s]Loading weights:  94%|¨€¨€¨€¨€¨€¨€¨€¨€¨€¨†| 522/558 [00:01<00:00, 472.04it/s]Loading weights: 100%|¨€¨€¨€¨€¨€¨€¨€¨€¨€¨€| 558/558 [00:01<00:00, 468.45it/s]
+[transformers] The tied weights mapping and config for this model specifies to tie shared.weight to lm_head.weight, but both are present in the checkpoints with different values, so we will NOT tie them. You should update the config with `tie_word_embeddings=False` to silence this warning.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Repo card metadata block was not found. Setting CardData to empty.
+trainable params: 18,284,544 || all params: 801,434,624 || trainable%: 2.2815
+  ledgar: subsampled to 15663 (weight=0.123)
+  ag_news: subsampled to 11075 (weight=0.087)
+  dbpedia: subsampled to 16213 (weight=0.128)
+Map:   0%|          | 0/60695 [00:00<?, ? examples/s]Map:   2%|¨‡         | 1000/60695 [00:00<00:12, 4698.89 examples/s]Map:   3%|¨†         | 2000/60695 [00:00<00:09, 5990.38 examples/s]Map:   5%|¨…         | 3000/60695 [00:00<00:08, 6663.18 examples/s]Map:   7%|¨ƒ         | 4000/60695 [00:00<00:08, 6681.86 examples/s]Map:   8%|¨‚         | 5000/60695 [00:00<00:08, 6428.45 examples/s]Map:  10%|¨         | 6000/60695 [00:00<00:08, 6662.16 examples/s]Map:  12%|¨€¨‡        | 7000/60695 [00:01<00:08, 6620.09 examples/s]Map:  13%|¨€¨†        | 8000/60695 [00:01<00:07, 6821.90 examples/s]Map:  15%|¨€¨…        | 9000/60695 [00:01<00:07, 6722.49 examples/s]Map:  16%|¨€¨ƒ        | 10000/60695 [00:01<00:07, 6746.81 examples/s]Map:  18%|¨€¨‚        | 11000/60695 [00:01<00:07, 6906.53 examples/s]Map:  20%|¨€¨        | 12000/60695 [00:01<00:07, 6874.36 examples/s]Map:  21%|¨€¨€¨‡       | 13000/60695 [00:01<00:07, 6706.14 examples/s]Map:  23%|¨€¨€¨†       | 14000/60695 [00:02<00:09, 4836.25 examples/s]Map:  25%|¨€¨€¨…       | 15000/60695 [00:02<00:08, 5344.76 examples/s]Map:  26%|¨€¨€¨ƒ       | 16000/60695 [00:02<00:07, 5797.93 examples/s]Map:  28%|¨€¨€¨‚       | 17000/60695 [00:02<00:07, 6156.36 examples/s]Map:  30%|¨€¨€¨       | 18000/60695 [00:02<00:06, 6379.68 examples/s]Map:  31%|¨€¨€¨€¨‡      | 19000/60695 [00:03<00:06, 6571.30 examples/s]Map:  33%|¨€¨€¨€¨†      | 20000/60695 [00:03<00:06, 6726.17 examples/s]Map:  35%|¨€¨€¨€¨…      | 21000/60695 [00:03<00:05, 6774.74 examples/s]Map:  36%|¨€¨€¨€¨„      | 22000/60695 [00:03<00:05, 6859.81 examples/s]Map:  38%|¨€¨€¨€¨‚      | 23000/60695 [00:03<00:05, 6877.67 examples/s]Map:  40%|¨€¨€¨€¨      | 24000/60695 [00:03<00:05, 6969.44 examples/s]Map:  41%|¨€¨€¨€¨€      | 25000/60695 [00:03<00:05, 6998.22 examples/s]Map:  43%|¨€¨€¨€¨€¨†     | 26000/60695 [00:04<00:04, 7032.98 examples/s]Map:  44%|¨€¨€¨€¨€¨…     | 27000/60695 [00:04<00:04, 6878.38 examples/s]Map:  49%|¨€¨€¨€¨€¨     | 30000/60695 [00:04<00:02, 11002.29 examples/s]Map:  53%|¨€¨€¨€¨€¨€¨†    | 32000/60695 [00:04<00:02, 13035.30 examples/s]Map:  59%|¨€¨€¨€¨€¨€¨    | 36000/60695 [00:04<00:02, 11599.20 examples/s]Map:  64%|¨€¨€¨€¨€¨€¨€¨…   | 39000/60695 [00:04<00:01, 13401.03 examples/s]Map:  68%|¨€¨€¨€¨€¨€¨€¨‚   | 41000/60695 [00:05<00:01, 14027.21 examples/s]Map:  71%|¨€¨€¨€¨€¨€¨€¨€   | 43000/60695 [00:05<00:01, 14481.88 examples/s]Map:  74%|¨€¨€¨€¨€¨€¨€¨€¨…  | 45000/60695 [00:05<00:01, 14911.60 examples/s]Map:  77%|¨€¨€¨€¨€¨€¨€¨€¨ƒ  | 47000/60695 [00:05<00:00, 15181.84 examples/s]Map:  81%|¨€¨€¨€¨€¨€¨€¨€¨€  | 49000/60695 [00:05<00:00, 15322.40 examples/s]Map:  84%|¨€¨€¨€¨€¨€¨€¨€¨€¨… | 51000/60695 [00:05<00:00, 15564.42 examples/s]Map:  87%|¨€¨€¨€¨€¨€¨€¨€¨€¨ƒ | 53000/60695 [00:05<00:00, 15635.18 examples/s]Map:  92%|¨€¨€¨€¨€¨€¨€¨€¨€¨€¨‡| 56000/60695 [00:05<00:00, 17128.24 examples/s]Map:  97%|¨€¨€¨€¨€¨€¨€¨€¨€¨€¨ƒ| 59000/60695 [00:06<00:00, 13607.96 examples/s]Map: 100%|¨€¨€¨€¨€¨€¨€¨€¨€¨€¨€| 60695/60695 [00:06<00:00, 9584.97 examples/s] 
+[transformers] warmup_ratio is deprecated and will be removed in v5.2. Use `warmup_steps` instead.
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\31531\Desktop\AI\cyera-analysis\benchmark\scripts\run_finetune.py", line 125, in <module>
+    main()
+  File "C:\Users\31531\Desktop\AI\cyera-analysis\benchmark\scripts\run_finetune.py", line 94, in main
+    model = train_phase1(cfg)
+            ^^^^^^^^^^^^^^^^^
+  File "C:\Users\31531\Desktop\AI\cyera-analysis\benchmark\train\trainer.py", line 121, in train_phase1
+    trainer = Seq2SeqTrainer(
+              ^^^^^^^^^^^^^^^
+TypeError: Seq2SeqTrainer.__init__() got an unexpected keyword argument 'tokenizer'
