@@ -62,8 +62,17 @@ class FlanT5ClassificationModel(FlanT5Model):
         info = _MODEL_MAP[self._variant]
         model_name = info["hf_name"]
         self._tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self._model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
-        if self._device == "cuda":
+
+        model_kwargs = {}
+        if self._quantization == "4bit":
+            from transformers import BitsAndBytesConfig
+            model_kwargs["quantization_config"] = BitsAndBytesConfig(load_in_4bit=True)
+        elif self._quantization == "8bit":
+            from transformers import BitsAndBytesConfig
+            model_kwargs["quantization_config"] = BitsAndBytesConfig(load_in_8bit=True)
+
+        self._model = AutoModelForSeq2SeqLM.from_pretrained(model_name, **model_kwargs)
+        if self._device == "cuda" and self._quantization not in ("4bit", "8bit"):
             self._model = self._model.to("cuda")
         self._pipe = True  # mark as loaded
 

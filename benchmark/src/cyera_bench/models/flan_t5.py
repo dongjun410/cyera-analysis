@@ -7,12 +7,14 @@ _MODEL_MAP: Dict[str, Dict[str, str | None]] = {
     "small": {"hf_name": "google/flan-t5-small",  "ner_checkpoint": "agentlans/flan-t5-small-ner"},
     "base":  {"hf_name": "google/flan-t5-base",   "ner_checkpoint": "pepegiallo/flan-t5-base_ner"},
     "large": {"hf_name": "google/flan-t5-large",  "ner_checkpoint": None},
+    "xl":    {"hf_name": "google/flan-t5-xl",     "ner_checkpoint": None},
 }
 
 _PARAM_COUNTS: Dict[str, int] = {
     "small": 77_000_000,
     "base":  250_000_000,
     "large": 780_000_000,
+    "xl":    2_850_000_000,
 }
 
 
