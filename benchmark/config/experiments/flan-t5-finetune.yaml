@@ -1,0 +1,48 @@
+# FLAN-T5-Large QLoRA Fine-Tuning Configuration
+# Usage: python -m benchmark.scripts.run_finetune --config benchmark/config/experiments/flan-t5-finetune.yaml
+
+model_name: "google/flan-t5-large"
+quantization: "8bit"
+
+lora_r: 16
+lora_alpha: 32
+lora_dropout: 0.05
+
+phase1_epochs: 3
+phase1_lr: 0.0002
+phase1_batch_size: 8
+phase1_grad_accum: 2
+phase1_max_length: 1024
+phase1_max_target_length: 128
+phase1_warmup_ratio: 0.1
+phase1_weight_decay: 0.01
+
+phase2_epochs: 12
+phase2_lr: 0.00005
+phase2_batch_size: 4
+phase2_grad_accum: 2
+phase2_lora_dropout: 0.10
+phase2_max_length: 1024
+phase2_max_target_length: 128
+phase2_warmup_ratio: 0.1
+phase2_weight_decay: 0.01
+phase2_early_stopping_patience: 3
+
+dbpedia_subsample: 0.10
+phase1_val_split: 0.05
+
+augment_back_translation_count: 2
+augment_entity_sub_count: 3
+augment_llm_synthesis_count: 5
+augment_quality_min_similarity: 0.15
+augment_quality_max_similarity: 0.95
+
+output_dir: "benchmark/models/flan-t5-finetuned"
+seed: 42
+
+template_ratios:
+  zero_shot: 0.40
+  few_shot: 0.20
+  cot: 0.15
+  label_to_content: 0.15
+  contrastive: 0.10
