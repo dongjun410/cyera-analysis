@@ -43,6 +43,7 @@ class FlanT5ClassificationModel(FlanT5Model):
         quantization: str | None = None,
         prompt_style: str = "two_step",
         max_input_chars: int = 8000,
+        finetuned_path: str | None = None,
     ):
         super().__init__(
             variant=variant,
@@ -51,6 +52,7 @@ class FlanT5ClassificationModel(FlanT5Model):
         )
         self._prompt_style = prompt_style
         self._max_input_chars = max_input_chars
+        self._finetuned_path = finetuned_path
 
     def _load_pipeline(self):
         """Override: load T5 model+tokenizer directly (pipeline not supported
@@ -60,7 +62,7 @@ class FlanT5ClassificationModel(FlanT5Model):
         from cyera_bench.models.flan_t5 import _MODEL_MAP
         from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
         info = _MODEL_MAP[self._variant]
-        model_name = info["hf_name"]
+        model_name = self._finetuned_path or info["hf_name"]
         self._tokenizer = AutoTokenizer.from_pretrained(model_name)
 
         model_kwargs = {}
