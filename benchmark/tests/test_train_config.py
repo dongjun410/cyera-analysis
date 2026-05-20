@@ -38,3 +38,6 @@ def test_config_validation():
 
     cfg2 = TrainingConfig(phase1_lr=0.001, phase2_lr=0.0001)
     assert cfg2.phase1_lr > cfg2.phase2_lr
+
+    with pytest.raises(ValueError, match="quantization must be"):
+        TrainingConfig(quantization="3bit")

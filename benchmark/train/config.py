@@ -66,9 +66,11 @@ class TrainingConfig:
     seed: int = 42
 
     def __post_init__(self):
+        if self.quantization is None:
+            return
         if self.quantization.lower() == "none":
             self.quantization = None
-        elif self.quantization not in ("8bit", "4bit", None):
+        elif self.quantization not in ("8bit", "4bit"):
             raise ValueError(f"quantization must be '8bit', '4bit', or 'none', got '{self.quantization}'")
 
     @classmethod
