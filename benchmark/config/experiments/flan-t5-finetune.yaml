@@ -2,7 +2,7 @@
 # Usage: python -m benchmark.scripts.run_finetune --config benchmark/config/experiments/flan-t5-finetune.yaml
 
 model_name: "google/flan-t5-large"
-quantization: "8bit"
+quantization: "4bit"
 
 lora_r: 16
 lora_alpha: 32
@@ -10,8 +10,8 @@ lora_dropout: 0.05
 
 phase1_epochs: 3
 phase1_lr: 0.0002
-phase1_batch_size: 2
-phase1_grad_accum: 8
+phase1_batch_size: 4
+phase1_grad_accum: 4
 phase1_max_length: 768
 phase1_max_target_length: 128
 phase1_warmup_ratio: 0.1
