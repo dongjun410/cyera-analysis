@@ -194,7 +194,7 @@ def _load_dbpedia(cfg: TrainingConfig) -> Tuple[List[str], List[dict[str, str]],
         9: "Animal", 10: "Plant", 11: "Album",
         12: "Film", 13: "Written Work",
     }
-    texts = [item["text"] for item in ds]
+    texts = [item["content"] for item in ds]
     labels = [{"l1": label_names[item["label"]], "l2": ""} for item in ds]
     l1_options = list(label_names.values())
     return texts, labels, l1_options
@@ -206,11 +206,19 @@ def _load_german_multifin() -> Tuple[List[str], List[dict[str, str]], List[str]]
     texts: List[str] = []
     labels: List[dict[str, str]] = []
     for item in ds:
-        text_val = item.get("text", "") or item.get("sentence", "") or ""
+        text_val = item.get("ger_text", "") or ""
         if not text_val:
             continue
-        l1 = item.get("l1_label", "") or item.get("label", "")
-        l2 = item.get("l2_label", "") or ""
+        l1 = item.get("highlev_label", "") or ""
+        l2_raw = item.get("lowlev_labels", "")
+        # lowlev_labels may be a string repr of a list, e.g. "['Accounting']"
+        l2 = ""
+        if l2_raw:
+            try:
+                parsed = eval(l2_raw)
+                l2 = parsed[0] if isinstance(parsed, list) and parsed else str(l2_raw)
+            except Exception:
+                l2 = str(l2_raw)
         if not l1:
             continue
         texts.append(str(text_val))
