@@ -348,7 +348,7 @@ BUILTIN_PATTERNS: list[dict] = [
     # ── Bank Account (US Routing + Account) ──
     {
         "entity_type": "US_ROUTING_NUMBER",
-        "regex": r"\b(?:0[1-9]|[12]\d|3[0-2])\d{7}\b",
+        "regex": r"\b(?:0\d|1[0-2]|2[1-9]|3[0-2]|6[1-9]|7[0-2]|80)\d{7}\b",
         "validation": None,
         "context_boost_terms": ["routing number", "ABA", "transit", "wire routing"],
         "context_penalty_terms": PENALTY_TERMS,
@@ -566,7 +566,7 @@ BUILTIN_PATTERNS: list[dict] = [
     # ── GPS Coordinates ──
     {
         "entity_type": "GPS_COORDINATES",
-        "regex": r"\b[-+]?(?:180(?:\.0+)?|(?:\d{1,2}|1[0-7]\d)(?:\.\d+)?)[,;\s]+[-+]?(?:90(?:\.0+)?|(?:\d{1,2})(?:\.\d+)?)\b",
+        "regex": r"\b[-+]?(?:180(?:\.0+)?|(?:\d{1,2}|1[0-7]\d)(?:\.\d+)?)[,;\s]+[-+]?(?:90(?:\.0+)?|[1-8]?\d(?:\.\d+)?)\b",
         "validation": None,
         "context_boost_terms": ["GPS", "latitude", "longitude", "coordinates", "location", "geolocation"],
         "context_penalty_terms": PENALTY_TERMS,
