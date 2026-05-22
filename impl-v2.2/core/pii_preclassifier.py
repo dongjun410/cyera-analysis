@@ -208,7 +208,8 @@ class PIIPreclassifier:
             parts = value.split('@')
             return parts[0][:2] + "***@" + parts[1] if len(parts) == 2 else "****"
         if pii_type in (PIIType.CREDIT_CARD, PIIType.SSN, PIIType.IBAN):
-            return value[:4] + "****" + value[-4:]
+            digits_only = re.sub(r'\D', '', value)
+            return digits_only[:4] + "****" + digits_only[-4:] if len(digits_only) >= 8 else "****"
         if pii_type == PIIType.PHONE:
             return value[:3] + "****" + value[-4:] if len(value) > 7 else "****"
         return value[:4] + "****"

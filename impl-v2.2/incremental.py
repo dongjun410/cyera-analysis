@@ -50,7 +50,12 @@ def main():
     structure_vecs = extractor.extract_batch(to_process)
 
     emb_service = EmbeddingService(config["embedding"])
-    new_embeddings = emb_service.encode_documents(to_process)
+    semantic_vectors = emb_service.encode_documents(to_process)
+
+    # Fuse Channel 1 (semantic) + Channel 2 (structure) — same as main.py
+    structure_weight = 0.3
+    weighted_structure = structure_vecs * structure_weight
+    new_embeddings = np.hstack([semantic_vectors, weighted_structure])
 
     # 4. Try distilled classifier first (if available)
     lc_config = config.get("learned_classifier", {})

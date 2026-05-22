@@ -135,8 +135,8 @@ class LabelPropagator:
             )
             clusters.append(cluster_info)
 
-            # 5. 分类传播：将标签写回每篇文档
-            label_to_propagate = llm_label or "_".join(keywords[:3])
+            # 5. 分类传播：cluster_id 关联 ClusterInfo.llm_label
+            # 消费者通过 cluster_id → ClusterInfo 查到业务标签
             for doc in cluster_docs:
                 doc.cluster_id = cid
                 doc.classification_source = "clustering"

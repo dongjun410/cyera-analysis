@@ -76,7 +76,7 @@ elasticsearch:
   host: "localhost"
   port: 9200
   index_name: "doc_clusters_v2"
-  vector_dims: 1024
+  vector_dims: 1043  # 1024 (BGE-M3 semantic) + 19 (structure features)
   similarity: "cosine"
   index_type: "hnsw"
 
