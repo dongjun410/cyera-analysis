@@ -87,16 +87,15 @@ class Tier0Engine:
                 VALIDATORS.get(validator_name) if validator_name else None
             )
 
+            penalty_terms = list(p.get("context_penalty_terms") or []) + extra_penalty
+            boost_terms = list(p.get("context_boost_terms") or []) + extra_boost
+
             self._compiled.append({
                 "entity_type": p["entity_type"],
                 "regex": re.compile(p["regex"]),
                 "validator": validator_fn,
-                "boost_terms": (
-                    list(p.get("context_boost_terms") or []) + extra_boost
-                ),
-                "penalty_terms": (
-                    list(p.get("context_penalty_terms") or []) + extra_penalty
-                ),
+                "penalty_re": _build_term_re(penalty_terms),
+                "boost_re": _build_term_re(boost_terms),
                 "min_confidence": float(p.get("min_confidence", 0.5)),
             })
 
@@ -131,8 +130,8 @@ class Tier0Engine:
             entity_type: str = cp["entity_type"]
             regex: re.Pattern = cp["regex"]
             validator: Callable[[str], bool] | None = cp["validator"]
-            boost_terms: list[str] = cp["boost_terms"]
-            penalty_terms: list[str] = cp["penalty_terms"]
+            penalty_re: re.Pattern | None = cp["penalty_re"]
+            boost_re: re.Pattern | None = cp["boost_re"]
             base_conf: float = cp["min_confidence"]
 
             for match in regex.finditer(text):
@@ -145,7 +144,7 @@ class Tier0Engine:
                 context_slice: str = text[ctx_start:ctx_end]
 
                 context_flag, context_modifier = self._check_context(
-                    context_slice, penalty_terms, boost_terms
+                    context_slice, penalty_re, boost_re
                 )
 
                 # ── Validator ──
@@ -206,54 +205,32 @@ class Tier0Engine:
     @staticmethod
     def _check_context(
         context_slice: str,
-        penalty_terms: list[str],
-        boost_terms: list[str],
+        penalty_re: re.Pattern | None,
+        boost_re: re.Pattern | None,
     ) -> tuple[str, float]:
-        """Scan context window for penalty/boost terms.
+        """Scan context window for penalty/boost terms using pre-compiled patterns.
 
         Penalty overrides boost — if both are present, penalty wins.
-
-        Args:
-            context_slice: The text window around the match.
-            penalty_terms: Terms that lower confidence.
-            boost_terms: Terms that raise confidence.
 
         Returns:
             (context_flag, context_modifier) tuple.
             flag is one of "penalty_term_present", "boost_term_present", "clean".
             modifier is 0.5, 1.2, or 1.0 respectively.
         """
-        # Check penalty terms first (they override boost)
-        for term in penalty_terms:
-            if _term_in_text(term, context_slice):
-                return ("penalty_term_present", 0.5)
-
-        # Check boost terms
-        for term in boost_terms:
-            if _term_in_text(term, context_slice):
-                return ("boost_term_present", 1.2)
-
+        if penalty_re is not None and penalty_re.search(context_slice):
+            return ("penalty_term_present", 0.5)
+        if boost_re is not None and boost_re.search(context_slice):
+            return ("boost_term_present", 1.2)
         return ("clean", 1.0)
 
 
-# ──────────────────────────────────────────────────────────────
-# Module-level helpers
-# ──────────────────────────────────────────────────────────────
+def _build_term_re(terms: list[str]) -> re.Pattern | None:
+    """Build a single compiled regex from a list of context terms.
 
-def _term_in_text(term: str, text: str) -> bool:
-    """Case-insensitive word-boundary check for a term in text.
-
-    Args:
-        term: The term to search for.
-        text: The text to search within.
-
-    Returns:
-        True if the term appears as a whole word in text.
+    Each term is wrapped with word-boundary anchors and escaped.
+    Returns None if the term list is empty (no-op for performance).
     """
-    # Escape special regex chars, wrap with word boundaries, case-insensitive
-    try:
-        pattern = re.compile(r"\b" + re.escape(term) + r"\b", re.IGNORECASE)
-        return bool(pattern.search(text))
-    except re.error:
-        # Fallback: simple case-insensitive substring check
-        return term.lower() in text.lower()
+    if not terms:
+        return None
+    escaped = "|".join(re.escape(t) for t in terms)
+    return re.compile(r"\b(?:" + escaped + r")\b", re.IGNORECASE)
