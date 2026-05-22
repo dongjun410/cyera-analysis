@@ -63,14 +63,14 @@ class ClusterInfo:
     """A cluster of documents after Tier 1."""
 
     cluster_id: str
+    doc_ids: list[str]
     structural_bucket: str  # Stage A bucket hash
-    doc_ids: list[str] = field(default_factory=list)
+    cluster_radius: float  # max cosine distance from centroid
+    representative_docs: list[str]  # doc_ids closest to centroid
+    tfidf_keywords: list[str]  # top-15 terms
+    pii_distribution: dict[str, int]
+    language_distribution: dict[str, int]
     centroid_embedding: np.ndarray | None = None  # mean of member embeddings
-    cluster_radius: float = 0.0  # max cosine distance from centroid
-    representative_docs: list[str] = field(default_factory=list)  # doc_ids closest to centroid
-    tfidf_keywords: list[str] = field(default_factory=list)  # top-15 terms
-    pii_distribution: dict[str, int] = field(default_factory=dict)
-    language_distribution: dict[str, int] = field(default_factory=dict)
     label: str | None = None
     label_confidence: float = 0.0
     needs_tier3: bool = False
