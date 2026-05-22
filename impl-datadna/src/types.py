@@ -84,6 +84,8 @@ class KnownType:
     type_name: str
     description: str
     structural_signature: str = ""  # hash of structural pattern
+    tfidf_keywords: list[str] = field(default_factory=list)  # representative keywords for TF-IDF overlap
+    pii_distribution: dict[str, int] = field(default_factory=dict)  # typical PII type distribution
     semantic_centroid: np.ndarray | None = None  # mean embedding of type exemplars
     detection_rules: list[str] = field(default_factory=list)  # suggested regex for Tier 0 extension
     status: str = "active"  # "active" | "pending_review"
