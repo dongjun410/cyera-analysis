@@ -1,0 +1,69 @@
+# 6-Engine Fusion Architecture Configuration
+
+# ── Engine Weights ──
+engines:
+  E1_regex:
+    weight: 1.0
+  E2_template:
+    weight: 1.0
+  E3_ml:
+    weight: 1.5
+  E4_knn:
+    weight: 1.0
+  E5_structural:
+    weight: 0.8
+  E6_llm:
+    weight: 2.0
+
+# ── Fusion ──
+fusion:
+  preliminary_consensus_threshold: 0.85  # E1-E5 consensus → skip LLM
+  manual_review_threshold: 0.4           # composite_confidence < 0.4 → review
+
+# ── E4 kNN ──
+knn:
+  min_types_for_activation: 5
+
+# ── E6 LLM ──
+llm:
+  api_base: "http://localhost:11434/v1"
+  model: "mistral:7b"
+  quantization: "4bit"
+  temperature: 0.3
+  max_input_chars: 2000
+
+# ── Embedding ──
+embedding:
+  model_name: "BAAI/bge-m3"
+  device: "cuda"
+  dim: 1024
+  batch_size: 32
+  max_token_length: 8192
+
+# ── Knowledge Distillation (E3 ML) ──
+distillation:
+  min_samples_per_class: 50
+  max_samples_per_class: 200
+  confidence_threshold: 0.85
+  retrain_trigger: 500
+  f1_degradation_threshold: 0.03
+
+# ── Type Discovery ──
+discovery:
+  outlier_buffer:
+    min_trigger_count: 100
+    same_pattern_threshold: 5
+  candidate_evaluation:
+    min_coherence: 0.75
+    min_distance_to_known: 0.3
+    min_cluster_size: 3
+
+# ── Monitoring ──
+monitoring:
+  window_hours: 1
+  alerts:
+    confidence_p50_min: 0.3
+    llm_call_rate_max: 0.5
+    manual_review_rate_max: 0.1
+    label_drift_kl_max: 0.3
+    fusion_fast_inconsistency_max: 0.05
