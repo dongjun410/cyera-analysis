@@ -197,6 +197,163 @@ class TypeLibrary:
         """Remove a type from the library."""
         self._types.pop(type_id, None)
 
+    def suggest_merges(
+        self,
+        name_threshold: float = 0.8,
+        semantic_threshold: float = 0.15,
+    ) -> list[dict]:
+        """Find candidate type pairs for merging.
+
+        Uses normalized edit distance for name similarity and cosine
+        distance between centroids for semantic similarity.
+
+        Never auto-merges — suggestions must be confirmed by an operator.
+
+        Args:
+            name_threshold: Minimum name similarity to flag (0.0-1.0).
+            semantic_threshold: Maximum semantic distance to flag.
+
+        Returns:
+            List of dicts with keys: type_id_a, type_id_b, name_a, name_b,
+            name_similarity, semantic_distance, suggested_action.
+        """
+        active = self.list_active()
+        suggestions: list[dict] = []
+
+        for i in range(len(active)):
+            for j in range(i + 1, len(active)):
+                a, b = active[i], active[j]
+
+                # Name similarity via normalized edit distance
+                name_sim = TypeLibrary._name_similarity(
+                    a.type_name, b.type_name
+                )
+                if name_sim < name_threshold:
+                    continue
+
+                # Semantic distance via centroids
+                sem_dist = 1.0
+                if a.centroid is not None and b.centroid is not None:
+                    cos_sim = float(np.dot(a.centroid, b.centroid))
+                    cos_sim = max(-1.0, min(1.0, cos_sim))
+                    sem_dist = 1.0 - cos_sim
+
+                if sem_dist < semantic_threshold:
+                    # Keep the type with more samples as the primary
+                    if a.sample_count >= b.sample_count:
+                        keeper, merged = a, b
+                    else:
+                        keeper, merged = b, a
+
+                    suggestions.append({
+                        "type_id_a": keeper.type_id,
+                        "type_id_b": merged.type_id,
+                        "name_a": keeper.type_name,
+                        "name_b": merged.type_name,
+                        "name_similarity": round(name_sim, 4),
+                        "semantic_distance": round(sem_dist, 4),
+                        "suggested_action": "merge_b_into_a",
+                        "keeper_sample_count": keeper.sample_count,
+                        "merged_sample_count": merged.sample_count,
+                    })
+
+        return suggestions
+
+    def merge_types(self, type_id_a: str, type_id_b: str) -> TypeInfo | None:
+        """Merge type B into type A.
+
+        Combines centroids (weighted average), merges keyword lists,
+        structural signatures, rules, and template hashes.
+        Type B is deprecated after merging.
+
+        Args:
+            type_id_a: The keeper type ID.
+            type_id_b: The type to merge and deprecate.
+
+        Returns:
+            The merged TypeInfo (type A), or None if either type not found.
+        """
+        a = self._types.get(type_id_a)
+        b = self._types.get(type_id_b)
+        if a is None or b is None:
+            return None
+
+        # Merge centroids (weighted by sample count)
+        if a.centroid is not None and b.centroid is not None:
+            total = a.sample_count + b.sample_count
+            if total > 0:
+                a.centroid = (
+                    a.centroid * a.sample_count + b.centroid * b.sample_count
+                ) / total
+        elif b.centroid is not None:
+            a.centroid = b.centroid.copy()
+
+        # Merge keywords (deduplicated, preserving order)
+        seen = set(a.keywords)
+        for kw in b.keywords:
+            if kw not in seen:
+                a.keywords.append(kw)
+                seen.add(kw)
+
+        # Merge structural signatures
+        for sig in b.structural_signatures:
+            if sig not in a.structural_signatures:
+                a.structural_signatures.append(sig)
+
+        # Merge rules and template hashes
+        a.rules = list(set(a.rules + b.rules))
+        a.template_hashes = list(set(a.template_hashes + b.template_hashes))
+
+        # Merge PII distribution
+        for pii_type, freq in b.pii_distribution.items():
+            a.pii_distribution[pii_type] = (
+                a.pii_distribution.get(pii_type, 0.0) + freq
+            )
+
+        # Update counts
+        a.sample_count += b.sample_count
+        a.last_seen_at = max(a.last_seen_at, b.last_seen_at)
+
+        # Deprecate B
+        self.deprecate(type_id_b)
+
+        return a
+
+    @staticmethod
+    def _name_similarity(name_a: str, name_b: str) -> float:
+        """Compute normalized edit distance similarity between two names.
+
+        Returns 1.0 for identical strings, ~0.0 for completely different.
+        """
+        if name_a == name_b:
+            return 1.0
+        if not name_a or not name_b:
+            return 0.0
+
+        # Levenshtein distance
+        m, n = len(name_a), len(name_b)
+        if m == 0 or n == 0:
+            return 0.0
+
+        # Use 2-row DP for memory efficiency
+        prev = list(range(n + 1))
+        curr = [0] * (n + 1)
+
+        for i in range(1, m + 1):
+            curr[0] = i
+            for j in range(1, n + 1):
+                cost = 0 if name_a[i - 1] == name_b[j - 1] else 1
+                curr[j] = min(
+                    curr[j - 1] + 1,      # insert
+                    prev[j] + 1,           # delete
+                    prev[j - 1] + cost,    # substitute
+                )
+            prev, curr = curr, prev
+
+        distance = prev[n]
+        max_len = max(m, n)
+        return 1.0 - (distance / max_len)
+
     @property
     def count(self) -> int:
         return len(self._types)
