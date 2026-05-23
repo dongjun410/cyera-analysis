@@ -5,6 +5,11 @@ Per spec section 4.5.
 Collects documents that could not be confidently classified by Tier 1/2/3,
 periodically re-clusters them, evaluates candidate clusters against
 coherence and distance-to-known criteria, and registers viable new types.
+
+Triggers (any of):
+  - Buffer size >= min_trigger_count (default 100)
+  - Same (bucket, label) pattern >= same_pattern_threshold (default 5)
+  - Time since last run >= time_trigger_hours (default 24)
 """
 
 from __future__ import annotations
@@ -18,6 +23,7 @@ from src.types import Document, KnownType
 
 if TYPE_CHECKING:
     from src.embeddings.bge_m3 import BgeM3Embedder
+    from src.llm.client import MistralClient
     from src.tier1.semantic import SemanticRefiner
     from src.tier1.structural import StructuralClusterer
     from src.tier2.matching import KnownTypeMatcher
@@ -48,7 +54,8 @@ class DiscoveryLoop:
     and distance-based rejection. Periodically re-clusters the accumulated
     outliers to discover emerging document types.
 
-    All dependencies are injected (DI pattern).
+    All dependencies are injected (DI pattern). Optional LLM client enables
+    descriptive type naming; falls back to template-based names otherwise.
     """
 
     def __init__(
@@ -58,6 +65,7 @@ class DiscoveryLoop:
         embedder: BgeM3Embedder,
         matcher: KnownTypeMatcher,
         config: dict | None = None,
+        llm: MistralClient | None = None,
     ) -> None:
         """Initialize the discovery loop with injected dependencies.
 
@@ -67,11 +75,13 @@ class DiscoveryLoop:
             embedder: BgeM3Embedder for encoding document text to embeddings.
             matcher: KnownTypeMatcher for registering newly discovered types.
             config: Optional overrides for DEFAULT_CONFIG keys.
+            llm: Optional MistralClient for generating descriptive type names.
         """
         self._structural = structural
         self._refiner = refiner
         self._embedder = embedder
         self._matcher = matcher
+        self._llm = llm
 
         # Merge config
         cfg = dict(DEFAULT_CONFIG)
@@ -88,6 +98,7 @@ class DiscoveryLoop:
         # Internal state
         self._buffer: list[tuple[Document, str]] = []  # (doc, reason)
         self._pattern_counts: dict[tuple[str, str], int] = {}  # (bucket, label) → count
+        self._last_run_time: float | None = None  # epoch seconds
 
     # ── Public API ────────────────────────────────────────────
 
@@ -121,9 +132,10 @@ class DiscoveryLoop:
     def should_run(self) -> bool:
         """Check whether the discovery loop should execute.
 
-        Returns True when EITHER:
+        Returns True when ANY of:
           - Outlier buffer size >= min_trigger_count (default: 100)
           - Any (structural_bucket, label) pattern count >= same_pattern_threshold (default: 5)
+          - Time since last run >= time_trigger_hours (default: 24)
         """
         if len(self._buffer) >= self._min_trigger_count:
             return True
@@ -132,6 +144,11 @@ class DiscoveryLoop:
             for count in self._pattern_counts.values()
         ):
             return True
+        # Time-based trigger: only when buffer is non-empty
+        if self._last_run_time is not None and len(self._buffer) > 0:
+            elapsed_hours = (time.time() - self._last_run_time) / 3600.0
+            if elapsed_hours >= self._time_trigger_hours:
+                return True
         return False
 
     def run(self) -> list[KnownType]:
@@ -153,6 +170,8 @@ class DiscoveryLoop:
         """
         if not self._buffer:
             return []
+
+        self._last_run_time = time.time()
 
         # Extract documents from buffer
         docs = [doc for doc, _ in self._buffer]
@@ -205,12 +224,16 @@ class DiscoveryLoop:
 
                 # ── Step 4: Create new KnownType ─────────────────
                 idx = len(discovered) + 1
+                type_name, type_desc = self._generate_type_name(
+                    cluster.tfidf_keywords,
+                    cluster.pii_distribution,
+                    cluster_docs,
+                    idx,
+                )
                 new_type = KnownType(
                     type_id=f"discovered_{timestamp}_{idx}",
-                    type_name=f"Unknown-Type-{idx}",
-                    description=(
-                        f"Auto-discovered type from cluster {cluster.cluster_id}"
-                    ),
+                    type_name=type_name,
+                    description=type_desc,
                     structural_signature=bucket_id,
                     tfidf_keywords=list(cluster.tfidf_keywords),
                     pii_distribution=dict(cluster.pii_distribution),
@@ -238,6 +261,113 @@ class DiscoveryLoop:
         return [doc for doc, _ in self._buffer]
 
     # ── Internal helpers ──────────────────────────────────────
+
+    def _generate_type_name(
+        self,
+        keywords: list[str],
+        pii_dist: dict[str, int],
+        cluster_docs: list[Document],
+        fallback_idx: int,
+    ) -> tuple[str, str]:
+        """Generate a human-readable type name and description.
+
+        Uses the LLM if available, otherwise falls back to a keyword-based
+        template name.
+
+        Args:
+            keywords: Top TF-IDF keywords for the cluster.
+            pii_dist: PII type distribution for the cluster.
+            cluster_docs: Documents in the candidate cluster.
+            fallback_idx: Integer index for template-based fallback naming.
+
+        Returns:
+            (type_name, description) tuple.
+        """
+        if self._llm is not None:
+            return self._llm_generate_name(keywords, pii_dist, cluster_docs)
+
+        # Fallback: keyword-based template
+        if keywords:
+            top_keywords = keywords[:3]
+            name = " ".join(w.capitalize() for w in top_keywords)
+        else:
+            name = f"Unknown-Type-{fallback_idx}"
+
+        desc = (
+            f"Auto-discovered type with keywords: {', '.join(keywords[:5])}. "
+            f"PII types: {', '.join(pii_dist.keys()) or 'none'}. "
+            f"Sample count: {len(cluster_docs)}."
+        )
+        return name, desc
+
+    def _llm_generate_name(
+        self,
+        keywords: list[str],
+        pii_dist: dict[str, int],
+        cluster_docs: list[Document],
+    ) -> tuple[str, str]:
+        """Use the LLM to generate a descriptive type name.
+
+        Sends representative document snippets (truncated) with keywords
+        and PII distribution context to the LLM for naming.
+
+        Args:
+            keywords: Top TF-IDF keywords for the cluster.
+            pii_dist: PII type distribution for the cluster.
+            cluster_docs: Documents in the candidate cluster.
+
+        Returns:
+            (type_name, description) tuple from LLM, or fallback on failure.
+        """
+        assert self._llm is not None
+
+        # Build a representative sample from cluster docs (up to 3, each truncated)
+        sample_texts: list[str] = []
+        for doc in cluster_docs[:3]:
+            sample_texts.append(doc.text[:500])
+        combined_sample = "\n---\n".join(sample_texts)
+
+        pii_summary = ", ".join(
+            f"{ptype}({count})" for ptype, count in sorted(pii_dist.items())
+        ) or "none"
+
+        prompt = (
+            "<instruction>Name and describe a newly discovered document type "
+            "based on its characteristics.</instruction>\n"
+            f"<keywords>{', '.join(keywords[:15])}</keywords>\n"
+            f"<pii_types>{pii_summary}</pii_types>\n"
+            f"<sample_documents>{combined_sample[:1500]}</sample_documents>\n"
+            "<output_schema>"
+            '{"type_name": "Short-Descriptive-Name", '
+            '"description": "One-sentence description of this document type."}'
+            "</output_schema>"
+        )
+
+        try:
+            # Use classify's prompt path but for naming — call _call_llm directly
+            # with a custom system prompt
+            messages = [
+                {
+                    "role": "system",
+                    "content": (
+                        "You name and describe newly discovered document types. "
+                        "Generate a concise, descriptive name (2-4 words) and a "
+                        "one-sentence description. Always respond with valid JSON."
+                    ),
+                },
+                {"role": "user", "content": prompt},
+            ]
+            result = self._llm._call_llm(messages)  # noqa: SLF001
+            name = result.get("type_name", f"Unknown-Type-{len(cluster_docs)}")
+            desc = result.get("description", "Auto-discovered document type.")
+            return str(name), str(desc)
+        except Exception:
+            # LLM naming failed — use keyword-based fallback
+            if keywords:
+                name = " ".join(w.capitalize() for w in keywords[:3])
+            else:
+                name = f"Unknown-Type-{len(cluster_docs)}"
+            return name, f"Auto-discovered type (LLM naming unavailable)."
 
     def _compute_min_distance_to_known(self, centroid: np.ndarray) -> float:
         """Compute the minimum cosine distance from centroid to any known type.

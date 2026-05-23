@@ -1,0 +1,35 @@
+{
+  "dataset": "twenty_newsgroups",
+  "size": 300,
+  "seed": 42,
+  "metrics": {
+    "num_docs_evaluated": 292,
+    "num_clusters": 5,
+    "cluster_purity_weighted": 0.3082,
+    "cluster_purity_macro": 0.5988,
+    "adjusted_rand_index": 0.0342,
+    "normalized_mutual_info": 0.0865,
+    "coverage": 0.9966,
+    "macro_precision": 0.8521,
+    "macro_recall": 0.8493,
+    "macro_f1": 0.8489,
+    "per_class_f1": {
+      "rec.autos": 0.8929,
+      "rec.motorcycles": 0.8667,
+      "rec.sport.baseball": 0.752,
+      "rec.sport.hockey": 0.7664,
+      "soc.religion.christian": 0.9667
+    },
+    "method_distribution": {
+      "llm_tier2": 292
+    }
+  },
+  "pipeline_stats": {
+    "tier0_time_s": 0.507,
+    "docs_with_pii": 288,
+    "tier1_time_s": 8.174,
+    "cluster_count": 5,
+    "method": "cold_start",
+    "total_time_s": 399.132
+  }
+}

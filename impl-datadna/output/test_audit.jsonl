@@ -1,0 +1,1 @@
+{"doc_id": "test", "timestamp": "2026-05-23T16:57:56", "final_label": "HR", "composite_confidence": 0.85, "method": "fusion_fast", "degraded": false, "manual_review": false, "label_scores": {}, "engines": {}}

@@ -1,0 +1,46 @@
+# DataDNA 优化方案依赖
+# Python >= 3.10
+
+# 深度学习 & 嵌入
+torch>=2.0.0
+transformers>=4.40.0
+sentence-transformers>=3.0.0
+
+# 科学计算
+numpy>=1.24.0
+pandas>=2.0.0
+scipy>=1.10.0
+
+# 聚类 & 向量检索
+scikit-learn>=1.3.0
+faiss-cpu>=1.7.4          # FAISS IVF索引
+# faiss-gpu>=1.7.4         # GPU加速 (CUDA环境)
+
+# 文档解析
+pymupdf>=1.24.0
+python-docx>=0.8.11
+openpyxl>=3.1.0
+python-pptx>=0.6.21
+
+# PII 检测 (Tier 0 规则引擎基础)
+presidio-analyzer>=2.2.0
+
+# NER (Tier 2)
+# DeBERTa-v3 通过 transformers 加载
+
+# LLM
+openai>=1.0.0
+bitsandbytes>=0.44.0      # INT8/4-bit 量化
+
+# 知识蒸馏
+setfit>=1.0.0
+datasets>=2.18.0
+accelerate>=0.27.0
+
+# 存储 & 检索
+elasticsearch>=8.18.0
+
+# 工具
+tqdm>=4.65.0
+pydantic>=2.0.0
+pyyaml>=6.0.0

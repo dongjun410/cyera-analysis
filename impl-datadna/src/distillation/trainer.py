@@ -504,6 +504,142 @@ class DistillationTrainer:
         return label, confidence
 
     # ------------------------------------------------------------------
+    # predict_with_routing — 3-tier deployment inference
+    # ------------------------------------------------------------------
+
+    def predict_with_routing(
+        self,
+        model: Any,
+        text: str,
+        embedder: Any | None = None,
+        cluster_centroids: list[tuple[str, Any]] | None = None,
+    ) -> tuple[str, float, str]:
+        """Three-tier inference routing per spec section 5.
+
+        Tier 1: confidence >= 0.85 → accept distilled label directly
+        Tier 2: confidence in [0.6, 0.85) → kNN cluster centroid verification
+                (if embedder + centroids provided), otherwise accept with
+                lower confidence
+        Tier 3: confidence < 0.6 → signal fallback to full Tier 2+3 pipeline
+
+        Parameters
+        ----------
+        model : Any
+            Trained SetFit model.
+        text : str
+            Document text to classify.
+        embedder : Any, optional
+            BgeM3Embedder instance for kNN verification. Required for Tier 2.
+        cluster_centroids : list[tuple[str, Any]], optional
+            List of (label, centroid_embedding) tuples from known clusters.
+            Required for Tier 2 kNN verification.
+
+        Returns
+        -------
+        label : str
+            Predicted label (or "fallback_required" for Tier 3).
+        confidence : float
+            Confidence score in [0.0, 1.0].
+        method : str
+            One of "distilled", "distilled_knn", "fallback_required".
+        """
+        label, confidence = self.predict(model, text)
+
+        # Tier 1: High confidence → accept
+        if confidence >= self.confidence_threshold_accept:
+            return label, confidence, "distilled"
+
+        # Tier 3: Very low confidence → fallback to full pipeline
+        if confidence < self.confidence_threshold_fallback:
+            return "fallback_required", confidence, "fallback_required"
+
+        # Tier 2: Mid confidence → kNN cluster verification
+        if embedder is not None and cluster_centroids:
+            return self._knn_verify(
+                text, label, confidence, embedder, cluster_centroids
+            )
+
+        # No embedder/centroids available → accept with reduced confidence
+        return label, confidence * 0.8, "distilled"
+
+    def _knn_verify(
+        self,
+        text: str,
+        predicted_label: str,
+        confidence: float,
+        embedder: Any,
+        cluster_centroids: list[tuple[str, Any]],
+    ) -> tuple[str, float, str]:
+        """kNN cluster centroid verification for mid-confidence predictions.
+
+        Embeds the document, finds the nearest cluster centroid, and checks
+        whether the nearest cluster's label matches the distilled prediction.
+
+        If they match → accept with boosted confidence.
+        If they differ but the nearest is close (< 0.3 cosine distance) →
+            adopt the cluster's label instead.
+        If nearest is far (> 0.5) → signal fallback.
+
+        Parameters
+        ----------
+        text : str
+            Document text.
+        predicted_label : str
+            Label from the distilled model.
+        confidence : float
+            Confidence from the distilled model.
+        embedder : Any
+            BgeM3Embedder instance.
+        cluster_centroids : list[tuple[str, Any]]
+            (label, centroid_embedding) pairs.
+
+        Returns
+        -------
+        label : str
+        confidence : float
+        method : str
+        """
+        import numpy as np
+
+        # Embed the document
+        embedding = embedder.encode([text])[0]  # (D,)
+
+        # Find nearest cluster centroid
+        best_label = None
+        best_similarity = -1.0
+
+        for cl_label, centroid in cluster_centroids:
+            if centroid is None:
+                continue
+            centroid_arr = np.asarray(centroid, dtype=np.float32)
+            # Cosine similarity (both are unit-normalized)
+            sim = float(np.dot(embedding, centroid_arr))
+            if sim > best_similarity:
+                best_similarity = sim
+                best_label = cl_label
+
+        if best_label is None:
+            return predicted_label, confidence, "distilled"
+
+        best_distance = 1.0 - best_similarity
+
+        # Nearest cluster matches prediction → accept with boosted confidence
+        if best_label == predicted_label and best_distance < 0.5:
+            boosted = min(1.0, confidence + 0.1)
+            return predicted_label, boosted, "distilled_knn"
+
+        # Nearest differs but is very close → adopt cluster label
+        if best_label != predicted_label and best_distance < 0.3:
+            return best_label, max(0.6, best_similarity), "distilled_knn"
+
+        # Nearest is far → fallback required
+        if best_distance > 0.5:
+            return "fallback_required", confidence, "fallback_required"
+
+        # Default: keep distilled prediction
+        return predicted_label, confidence, "distilled_knn"
+
+    # ------------------------------------------------------------------
     # helpers
     # ------------------------------------------------------------------
 

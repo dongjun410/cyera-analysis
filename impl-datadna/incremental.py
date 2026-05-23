@@ -33,11 +33,17 @@ import numpy as np
 import yaml
 
 from src.embeddings.bge_m3 import BgeM3Embedder
+from src.llm.client import LLMConfig, MistralClient
+from src.ner.deberta import DebertaNER
 from src.tier0.engine import Tier0Engine
 from src.tier1.incremental import IncrementalAssigner
 from src.tier1.semantic import SemanticRefiner
 from src.tier1.structural import StructuralClusterer
-from src.types import ClusterInfo, Document
+from src.tier2.classifier import Tier2Classifier
+from src.tier2.matching import KnownTypeMatcher
+from src.tier2.propagation import LabelPropagator
+from src.tier3.quality_gate import QualityGate
+from src.types import ClassificationResult, ClusterInfo, Document
 
 logging.basicConfig(
     level=logging.INFO,
@@ -280,14 +286,14 @@ def _read_json(file_path: Path) -> str:
 # ═══════════════════════════════════════════════════════════════════
 
 def _init_components(config: dict[str, Any]) -> dict[str, Any]:
-    """初始化增量处理所需的最小组件集合。
+    """初始化增量处理所需的组件集合。
 
     组件: Tier0Engine, StructuralClusterer, BgeM3Embedder,
-           SemanticRefiner (IncrementalAssigner 构造函数需要),
-           IncrementalAssigner
-
-    不初始化: DeBERTa NER, LLM Client, KnownTypeMatcher, LabelPropagator,
-              Tier2Classifier, QualityGate, DiscoveryLoop
+           SemanticRefiner, IncrementalAssigner,
+           DebertaNER, MistralClient (Tier2 + Tier3),
+           KnownTypeMatcher, LabelPropagator,
+           Tier2Classifier (outlier per-doc classification),
+           QualityGate (outlier verification)
     """
     components: dict[str, Any] = {}
 
@@ -313,7 +319,6 @@ def _init_components(config: dict[str, Any]) -> dict[str, Any]:
     logger.info("BgeM3Embedder 已初始化 (dim=%d)", components["embedder"].dim)
 
     # ── SemanticRefiner (IncrementalAssigner 构造函数需要) ──────
-    # 注意: assign() 方法不使用 refiner，仅存储以备重聚类触发
     stage_b_cfg = config.get("tier1", {}).get("stage_b", {})
     components["refiner"] = SemanticRefiner(components["embedder"], stage_b_cfg)
     logger.info("SemanticRefiner 已初始化")
@@ -327,6 +332,57 @@ def _init_components(config: dict[str, Any]) -> dict[str, Any]:
         config=inc_cfg,
     )
     logger.info("IncrementalAssigner 已初始化")
+
+    # ── DeBERTa NER (用于离群文档分类) ──────────────────────────
+    t2 = config.get("tier2", {})
+    ner_model = t2.get("ner_model", "microsoft/deberta-v3-base")
+    ner_device = t2.get("ner_device", "cuda")
+    components["ner"] = DebertaNER(model_name=ner_model, device=ner_device)
+    logger.info("DebertaNER 已初始化")
+
+    # ── LLM Tier 2 (4-bit, 用于离群文档逐文档分类) ────────────
+    t2_llm = t2.get("llm", {})
+    components["llm_tier2"] = MistralClient(LLMConfig(
+        api_base=t2_llm.get("api_base", "http://localhost:11434/v1"),
+        model=t2_llm.get("model", "mistral:7b"),
+        quantization=t2_llm.get("quantization", "4bit"),
+        temperature=t2_llm.get("temperature", 0.3),
+    ))
+    logger.info("MistralClient (Tier2) 已初始化")
+
+    # ── KnownTypeMatcher ────────────────────────────────────────
+    match_cfg = t2.get("known_type_matching", {})
+    components["matcher"] = KnownTypeMatcher(known_types=[], config=match_cfg)
+    logger.info("KnownTypeMatcher 已初始化")
+
+    # ── LabelPropagator ─────────────────────────────────────────
+    prop_cfg = t2.get("propagation", {})
+    components["propagator"] = LabelPropagator(prop_cfg)
+    logger.info("LabelPropagator 已初始化")
+
+    # ── Tier2Classifier (离群文档逐文档分类) ────────────────────
+    components["classifier"] = Tier2Classifier(
+        matcher=components["matcher"],
+        ner=components["ner"],
+        llm=components["llm_tier2"],
+        propagator=components["propagator"],
+    )
+    logger.info("Tier2Classifier 已初始化")
+
+    # ── LLM Tier 3 (INT8, 离群文档质量验证) ────────────────────
+    t3 = config.get("tier3", {})
+    t3_llm = t3.get("llm", {})
+    components["llm_tier3"] = MistralClient(LLMConfig(
+        api_base=t3_llm.get("api_base", "http://localhost:11434/v1"),
+        model=t3_llm.get("model", "mistral:7b"),
+        quantization=t3_llm.get("quantization", "int8"),
+        temperature=t3_llm.get("temperature", 0.1),
+    ))
+    logger.info("MistralClient (Tier3) 已初始化")
+
+    # ── QualityGate ─────────────────────────────────────────────
+    components["quality_gate"] = QualityGate(components["llm_tier3"], t3)
+    logger.info("QualityGate 已初始化")
 
     return components
 
@@ -463,6 +519,8 @@ def main() -> int:
     # ── 逐文档处理 ────────────────────────────────────────────────
     engine: Tier0Engine = comp["engine"]
     assigner: IncrementalAssigner = comp["incremental"]
+    classifier: Tier2Classifier = comp["classifier"]
+    quality_gate: QualityGate = comp["quality_gate"]
 
     results: list[dict[str, Any]] = []
     assigned_count = 0
@@ -526,20 +584,92 @@ def main() -> int:
                 ),
             })
         else:
-            # Step 6: 离群 → 标记为未分类
+            # Step 6: 离群 → 运行 Tier 2+3 逐文档分类
             outlier_count += 1
             logger.warning(
                 "检测到离群文档: doc=%s, reason=%s, needs_recluster=%s",
                 doc.doc_id, assignment.outlier_reason, assignment.needs_reclustering,
             )
+
+            # Tier 2: Per-doc zero-shot LLM classification
+            try:
+                tier2_results = classifier.cold_start_classify([doc])
+                if tier2_results:
+                    cr = tier2_results[0]
+                else:
+                    cr = ClassificationResult(
+                        doc_id=doc.doc_id,
+                        label="unclassified_outlier",
+                        confidence=0.0,
+                        method="incremental_outlier",
+                        is_new_type=True,
+                        needs_manual_review=True,
+                        rationale="Tier 2 returned no results",
+                    )
+            except Exception as exc:
+                logger.error(
+                    "Tier 2 离群分类失败 doc=%s: %s", doc.doc_id, exc,
+                )
+                cr = ClassificationResult(
+                    doc_id=doc.doc_id,
+                    label="unclassified_outlier",
+                    confidence=0.0,
+                    method="incremental_outlier",
+                    is_new_type=True,
+                    needs_manual_review=True,
+                    rationale=f"Tier 2 error: {exc}",
+                )
+
+            # Tier 3: Quality gate verification for sensitive/low-confidence results
+            try:
+                if quality_gate.should_trigger(
+                    doc,
+                    ClusterInfo(
+                        cluster_id="outlier-synthetic",
+                        doc_ids=[doc.doc_id],
+                        structural_bucket="outlier",
+                        cluster_radius=0.0,
+                        representative_docs=[doc.doc_id],
+                        tfidf_keywords=[],
+                        pii_distribution=(
+                            doc.pii_features.pii_type_distribution
+                            if doc.pii_features else {}
+                        ),
+                        language_distribution={},
+                    ),
+                    cr,
+                ):
+                    cr = quality_gate.verify(
+                        doc,
+                        ClusterInfo(
+                            cluster_id="outlier-synthetic",
+                            doc_ids=[doc.doc_id],
+                            structural_bucket="outlier",
+                            cluster_radius=0.0,
+                            representative_docs=[doc.doc_id],
+                            tfidf_keywords=[],
+                            pii_distribution=(
+                                doc.pii_features.pii_type_distribution
+                                if doc.pii_features else {}
+                            ),
+                            language_distribution={},
+                        ),
+                        cr,
+                    )
+                    cr.method = "llm_tier3"
+            except Exception as exc:
+                logger.warning(
+                    "Tier 3 验证失败 doc=%s: %s — 使用 Tier 2 结果", doc.doc_id, exc,
+                )
+
             results.append({
-                "doc_id": doc.doc_id,
-                "label": "unclassified_outlier",
-                "confidence": 0.0,
-                "method": "incremental_outlier",
-                "is_new_type": True,
-                "needs_manual_review": True,
-                "rationale": f"Outlier: {assignment.outlier_reason}",
+                "doc_id": cr.doc_id,
+                "label": cr.label,
+                "confidence": cr.confidence,
+                "method": cr.method,
+                "is_new_type": cr.is_new_type,
+                "needs_manual_review": cr.needs_manual_review,
+                "rationale": cr.rationale,
             })
 
     stats["tier0"] = {
