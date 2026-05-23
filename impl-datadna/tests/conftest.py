@@ -1,8 +1,4 @@
-"""Shared pytest fixtures for DataDNA integration tests.
-
-Provides synthetic document sets, config dicts, and mock clients
-that all integration tests can reuse.
-"""
+"""Shared pytest fixtures for 6-engine fusion architecture tests."""
 
 from __future__ import annotations
 
@@ -13,23 +9,9 @@ import pytest
 from src.types import Document
 
 
-# ──────────────────────────────────────────────────────────────
-# sample_documents — 20 realistic synthetic documents
-# ──────────────────────────────────────────────────────────────
-
 @pytest.fixture(scope="module")
 def sample_documents() -> list[Document]:
-    """Return 20 synthetic Document objects covering 5 types.
-
-    Distribution:
-      - 4 HR docs (doc_hr_1..4) — SSN, names, start dates
-      - 4 Financial docs (doc_fin_1..4) — revenue, credit cards
-      - 4 Medical docs (doc_med_1..4) — patient IDs, diagnoses, NPI
-      - 4 JSON API logs (doc_json_1..4) — timestamped API responses
-      - 4 Plain text (doc_txt_1..4) — meeting notes, general text
-
-    Each Document has doc_id, text, and metadata (file_type).
-    """
+    """20 synthetic documents covering HR, Finance, Medical, API, General."""
     hr_texts = [
         "Employee SSN: 123-45-6789, Name: John Smith, Start date: 2020-03-15, Department: Engineering, Salary: $95,000",
         "Employee SSN: 456-78-9012, Name: Sarah Chen, Start date: 2019-07-01, Department: Marketing, Salary: $110,000",
@@ -48,56 +30,30 @@ def sample_documents() -> list[Document]:
         "Patient ID: MRN: 77634, Diagnosis: Anxiety Disorder, NPI: 4567890123, Referred to: Dr. James Wilson, Psychiatry Dept",
         "Patient ID: MRN: 99201, Diagnosis: COPD, NPI: 2345678901, Pulmonary function test scheduled, Smoking cessation advised",
     ]
-    json_texts = [
-        '{"timestamp": "2024-01-15T08:23:45Z", "endpoint": "/api/users", "status": 200, "response_time_ms": 45, "user_agent": "PostmanRuntime/7.36"}',
-        '{"timestamp": "2024-01-15T09:10:12Z", "endpoint": "/api/orders", "status": 201, "response_time_ms": 120, "payload_size": 2048}',
-        '{"timestamp": "2024-01-15T10:45:33Z", "endpoint": "/api/auth/login", "status": 401, "response_time_ms": 15, "error": "Invalid credentials"}',
-        '{"timestamp": "2024-01-15T11:00:01Z", "endpoint": "/api/reports/generate", "status": 202, "response_time_ms": 350, "job_id": "job-8a7b"}',
+    api_texts = [
+        '{"timestamp": "2024-01-15T08:23:45Z", "endpoint": "/api/users", "status": 200, "response_time_ms": 45}',
+        '{"timestamp": "2024-01-15T09:10:12Z", "endpoint": "/api/orders", "status": 201, "response_time_ms": 120}',
+        '{"timestamp": "2024-01-15T10:45:33Z", "endpoint": "/api/auth/login", "status": 401, "response_time_ms": 15}',
+        '{"timestamp": "2024-01-15T11:00:01Z", "endpoint": "/api/reports/generate", "status": 202, "response_time_ms": 350}',
     ]
-    txt_texts = [
-        "Meeting notes: Discuss Q1 goals and team building activities. Action items: finalize budget by Friday, schedule all-hands for March. Attendees: Alice, Bob, Carol.",
-        "Project roadmap 2024: Phase 1 infrastructure upgrade, Phase 2 feature rollout, Phase 3 performance optimization. Lead: Engineering team.",
-        "Quarterly all-hands agenda: Welcome new hires, team updates, Q&A session. Catering: sandwiches and salad. Room: Conference Hall A.",
-        "Team offsite planning: Location TBD, budget $5,000, activities: hiking + brainstorming. Date: April 15-16. RSVP by March 30.",
+    gen_texts = [
+        "Meeting notes: Discuss Q1 goals and team building activities. Action items: finalize budget by Friday.",
+        "Project roadmap 2024: Phase 1 infrastructure upgrade, Phase 2 feature rollout, Phase 3 performance optimization.",
+        "Quarterly all-hands agenda: Welcome new hires, team updates, Q&A session. Catering: sandwiches and salad.",
+        "Team offsite planning: Location TBD, budget $5,000, activities: hiking + brainstorming. Date: April 15-16.",
     ]
 
     documents: list[Document] = []
-
     for i, text in enumerate(hr_texts, 1):
-        documents.append(Document(
-            doc_id=f"doc_hr_{i}",
-            text=text,
-            metadata={"file_type": ".docx", "department": "HR"},
-        ))
-
+        documents.append(Document(doc_id=f"doc_hr_{i}", text=text, metadata={"file_type": ".docx"}))
     for i, text in enumerate(fin_texts, 1):
-        documents.append(Document(
-            doc_id=f"doc_fin_{i}",
-            text=text,
-            metadata={"file_type": ".pdf", "department": "Finance"},
-        ))
-
+        documents.append(Document(doc_id=f"doc_fin_{i}", text=text, metadata={"file_type": ".pdf"}))
     for i, text in enumerate(med_texts, 1):
-        documents.append(Document(
-            doc_id=f"doc_med_{i}",
-            text=text,
-            metadata={"file_type": ".pdf", "department": "Medical"},
-        ))
-
-    for i, text in enumerate(json_texts, 1):
-        documents.append(Document(
-            doc_id=f"doc_json_{i}",
-            text=text,
-            metadata={"file_type": ".json", "department": "Engineering"},
-        ))
-
-    for i, text in enumerate(txt_texts, 1):
-        documents.append(Document(
-            doc_id=f"doc_txt_{i}",
-            text=text,
-            metadata={"file_type": ".txt", "department": "General"},
-        ))
-
+        documents.append(Document(doc_id=f"doc_med_{i}", text=text, metadata={"file_type": ".pdf"}))
+    for i, text in enumerate(api_texts, 1):
+        documents.append(Document(doc_id=f"doc_api_{i}", text=text, metadata={"file_type": ".json"}))
+    for i, text in enumerate(gen_texts, 1):
+        documents.append(Document(doc_id=f"doc_gen_{i}", text=text, metadata={"file_type": ".txt"}))
     return documents
 
 
@@ -107,11 +63,7 @@ def sample_documents() -> list[Document]:
 
 @pytest.fixture(scope="module")
 def sample_config() -> dict:
-    """Return a dict with all tier configs needed for initialization.
-
-    Structure mirrors config.yaml but with values appropriate for testing
-    (e.g. low thresholds, small buffer limits).
-    """
+    """Return a dict with all tier configs needed for initialization."""
     return {
         "tier0": {
             "context_window": 100,
@@ -184,18 +136,6 @@ def sample_config() -> dict:
 def mock_llm_client() -> Mock:
     """Return a Mock MistralClient that returns predefined responses
     based on document content keywords.
-
-    Classification (classify):
-      - Text containing "SSN" or "Employee" → "HR Document"
-      - Text containing "revenue" or "Credit card" or "Invoice" → "Financial Report"
-      - Text containing "Patient" or "Diagnosis" → "Medical Record"
-      - Text containing "timestamp" and "endpoint" → "API Log"
-      - Text containing "Meeting" or "agenda" → "Meeting Notes"
-      - Default → "General Document"
-
-    Verification (verify):
-      - Always confirms the current label with confidence 0.85
-      - unless label is "unknown" → confidence 0.40, needs_manual_review=True
     """
     def _classify_side_effect(
         document_text: str,
@@ -203,7 +143,6 @@ def mock_llm_client() -> Mock:
         ner_results: list | None = None,
         pii_features: dict | None = None,
     ) -> dict:
-        # Determine label from document content keywords
         text_lower = document_text.lower()
 
         if "ssn" in text_lower or "employee" in text_lower:

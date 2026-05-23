@@ -93,14 +93,14 @@ def test_full_pipeline_small_batch(sample_documents: list[Document]) -> None:
     assert any_mrn, "At least one medical doc should have MEDICAL_RECORD detected"
 
     # ── JSON docs — should NOT crash on structured data ────────
-    json_results = [r for r in results if r.doc_id.startswith("doc_json")]
-    for r in json_results:
+    api_results = [r for r in results if r.doc_id.startswith("doc_api")]
+    for r in api_results:
         assert isinstance(r.pii_features, list), (
-            f"JSON doc {r.doc_id} should have features list, not error"
+            f"API doc {r.doc_id} should have features list, not error"
         )
 
     # ── Plain text docs — expected to have few/no PII features ─
-    txt_results = [r for r in results if r.doc_id.startswith("doc_txt")]
+    txt_results = [r for r in results if r.doc_id.startswith("doc_gen")]
     for r in txt_results:
         assert isinstance(r.pii_features, list), (
             f"Plain text doc {r.doc_id} should have features list"
