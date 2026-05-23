@@ -55,7 +55,45 @@ class E4kNNEngine(BaseEngine):
         if self._embedder is None:
             return False
         centroids = self._type_library.list_centroids()
-        return len(centroids) >= self._min_types
+        return len(centroids) >= 1  # Only need 1 centroid to be useful
+
+    def bootstrap_centroids(self, force: bool = False) -> int:
+        """Bootstrap centroids from type keywords when no real samples exist.
+
+        Encodes the concatenated keywords of each type as a zero-shot
+        centroid. Only bootstraps types that don't already have a centroid.
+
+        Args:
+            force: If True, overwrite existing centroids too.
+
+        Returns:
+            Number of centroids bootstrapped.
+        """
+        if self._embedder is None:
+            return 0
+
+        count = 0
+        for info in self._type_library.list_active():
+            if info.centroid is not None and not force:
+                continue
+
+            if not info.keywords:
+                continue
+
+            # Build a pseudo-document from keywords
+            pseudo_text = f"Document type: {info.type_name}. "
+            pseudo_text += "Keywords: " + ", ".join(info.keywords) + ". "
+            pseudo_text += f"This is a {info.type_name.lower()} document."
+
+            try:
+                embedding = self._embedder.encode([pseudo_text])[0]
+                info.centroid = embedding.astype(np.float32)
+                info.sample_count = max(info.sample_count, 1)
+                count += 1
+            except Exception:
+                continue
+
+        return count
 
     def analyze(self, doc: Document) -> EngineOutput:
         """Embed document + find nearest type centroid.

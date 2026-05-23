@@ -78,6 +78,8 @@ BUILTIN_RULES: list[DocTypeRule] = [
                 ["MONEY", "CREDIT_CARD"], "Financial Report", 0.70),
     DocTypeRule("FIN_BANK_001", _compile(r"\b(?:bank\s*statement|account\s*statement|transaction\s*history|ending\s*balance)\b"),
                 ["MONEY", "IBAN"], "Financial Report", 0.70),
+    DocTypeRule("FIN_EXPENSE_002", _compile(r"\b(?:expense\s*report.*employee|employee.*expense\s*report)\b"),
+                ["MONEY", "CREDIT_CARD"], "Financial Report", 0.80),
     DocTypeRule("FIN_TAX_001", _compile(r"\b(?:tax\s*return|Form\s*1040|Schedule\s*[A-Z]|tax\s*filing)\b"),
                 ["SSN", "MONEY", "EMPLOYER_ID"], "Financial Report", 0.75),
     DocTypeRule("FIN_EXPENSE_001", _compile(r"\b(?:expense\s*report|reimbursement|travel\s*expense|out-of-pocket)\b"),
