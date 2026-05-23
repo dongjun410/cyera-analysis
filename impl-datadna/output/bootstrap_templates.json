@@ -1,0 +1,37 @@
+{
+  "784a4a90f3a28ed4ab9c45606ffb1b7bd4567f853629437a220aaf0e0aff9601": {
+    "label": "Financial Report",
+    "doc_id": "finance_01",
+    "pii_count": 3
+  },
+  "3948681175c3fd333b668d75b50bc05d8e57c021e308bf605a919428129c0367": {
+    "label": "Financial Report",
+    "doc_id": "finance_02",
+    "pii_count": 2
+  },
+  "82dc9a89bd6a7e35052ac0d7969459d8f9a762b11c798bf3bcce3605ab59076d": {
+    "label": "HR & Payroll",
+    "doc_id": "hr_01",
+    "pii_count": 1
+  },
+  "2dadab47b414589f01f408cdac79b46d40be201ea2a4403f637f0b3a5b750ebe": {
+    "label": "HR & Payroll",
+    "doc_id": "hr_02",
+    "pii_count": 1
+  },
+  "3bd0696b1bdf847460066d4dfcdb16085a01ebc7a31050fdd8e5f2c198aafb2d": {
+    "label": "API Log",
+    "doc_id": "json_log_01",
+    "pii_count": 0
+  },
+  "caba4b582af51b3524a30f445c2b3c6082e8d8ec4a6cceecb251cfe9eddc820e": {
+    "label": "Medical Record",
+    "doc_id": "medical_01",
+    "pii_count": 1
+  },
+  "18a969bc62fe257ba1727cb2fb65b3b5725d0607ed28fbd4af758e84598c56d3": {
+    "label": "Email / Communication",
+    "doc_id": "plain_01",
+    "pii_count": 0
+  }
+}

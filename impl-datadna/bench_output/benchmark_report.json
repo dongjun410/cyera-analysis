@@ -1,0 +1,35 @@
+{
+  "config": {
+    "num_docs": 20,
+    "e1_available": true,
+    "e2_available": true,
+    "e3_available": false,
+    "e4_available": false,
+    "e5_available": true,
+    "e6_available": true
+  },
+  "results": {
+    "fusion_fast_count": 0,
+    "fusion_full_count": 20,
+    "llm_call_rate": 1.0,
+    "weighted_avg_ms": 1196.41,
+    "r4_target_ms": 300.0,
+    "r4_pass": false,
+    "fusion_fast": {
+      "p50_ms": null,
+      "p95_ms": null,
+      "p99_ms": null,
+      "mean_ms": null,
+      "min_ms": null,
+      "max_ms": null
+    },
+    "fusion_full": {
+      "p50_ms": 1215.07,
+      "p95_ms": 1583.16,
+      "p99_ms": 1628.74,
+      "mean_ms": 1196.41,
+      "min_ms": 689.89,
+      "max_ms": 1640.13
+    }
+  }
+}

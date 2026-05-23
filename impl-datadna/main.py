@@ -161,6 +161,12 @@ def _init_components(config: dict[str, Any]) -> dict[str, Any]:
         type_library=type_lib,
         min_types=knn_cfg.get("min_types_for_activation", 5),
     )
+    # Bootstrap centroids from keywords if no real centroids exist yet
+    if components["embedder"] is not None:
+        bootstrapped = components["e4"].bootstrap_centroids()
+        if bootstrapped > 0:
+            logger.info("E4 bootstrapped %d centroids from keywords", bootstrapped)
+
     available = "available" if components["e4"].is_available else "unavailable"
     logger.info("E4 kNN engine initialized (%s)", available)
 

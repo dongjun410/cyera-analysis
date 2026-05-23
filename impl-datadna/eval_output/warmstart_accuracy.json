@@ -1,0 +1,314 @@
+{
+  "metrics": {
+    "per_class": {
+      "API Log": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 5
+      },
+      "Email / Communication": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 3
+      },
+      "Financial Report": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 5
+      },
+      "HR & Payroll": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 5
+      },
+      "Legal Document": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 2
+      },
+      "Medical Record": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 5
+      },
+      "Technical Document": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 5
+      }
+    },
+    "macro_precision": 1.0,
+    "macro_recall": 1.0,
+    "macro_f1": 1.0,
+    "total": 30,
+    "correct": 30,
+    "method_distribution": {
+      "fusion_fast": 0,
+      "fusion_full": 30
+    },
+    "llm_call_rate": 1.0,
+    "total_time_s": 238.3,
+    "avg_ms_per_doc": 7944.0
+  },
+  "r1_delta": 0.0,
+  "r2_min_f1": 1.0,
+  "r4_llm_rate": 1.0,
+  "r4_avg_ms": 7944.0,
+  "engine_status": {
+    "E1_regex": true,
+    "E2_template": true,
+    "E3_ml": true,
+    "E4_knn": true,
+    "E5_structural": true,
+    "E6_llm": true
+  },
+  "details": [
+    {
+      "doc_id": "hr_w2",
+      "true": "HR & Payroll",
+      "pred": "HR & Payroll",
+      "correct": true,
+      "confidence": 0.4987,
+      "method": "fusion_full"
+    },
+    {
+      "doc_id": "hr_offer",
+      "true": "HR & Payroll",
+      "pred": "HR & Payroll",
+      "correct": true,
+      "confidence": 0.4917,
+      "method": "fusion_full"
+    },
+    {
+      "doc_id": "hr_benefits",
+      "true": "HR & Payroll",
+      "pred": "HR & Payroll",
+      "correct": true,
+      "confidence": 0.4852,
+      "method": "fusion_full"
+    },
+    {
+      "doc_id": "hr_termination",
+      "true": "HR & Payroll",
+      "pred": "HR & Payroll",
+      "correct": true,
+      "confidence": 0.3739,
+      "method": "fusion_full"
+    },
+    {
+      "doc_id": "hr_performance",
+      "true": "HR & Payroll",
+      "pred": "HR & Payroll",
+      "correct": true,
+      "confidence": 0.4428,
+      "method": "fusion_full"
+    },
+    {
+      "doc_id": "fin_quarterly",
+      "true": "Financial Report",
+      "pred": "Financial Report",
+      "correct": true,
+      "confidence": 0.3744,
+      "method": "fusion_full"
+    },
+    {
+      "doc_id": "fin_invoice",
+      "true": "Financial Report",
+      "pred": "Financial Report",
+      "correct": true,
+      "confidence": 0.5062,
+      "method": "fusion_full"
+    },
+    {
+      "doc_id": "fin_bank",
+      "true": "Financial Report",
+      "pred": "Financial Report",
+      "correct": true,
+      "confidence": 0.4903,
+      "method": "fusion_full"
+    },
+    {
+      "doc_id": "fin_tax",
+      "true": "Financial Report",
+      "pred": "Financial Report",
+      "correct": true,
+      "confidence": 0.5006,
+      "method": "fusion_full"
+    },
+    {
+      "doc_id": "fin_expense",
+      "true": "Financial Report",
+      "pred": "Financial Report",
+      "correct": true,
+      "confidence": 0.5102,
+      "method": "fusion_full"
+    },
+    {
+      "doc_id": "med_record",
+      "true": "Medical Record",
+      "pred": "Medical Record",
+      "correct": true,
+      "confidence": 0.4999,
+      "method": "fusion_full"
+    },
+    {
+      "doc_id": "med_lab",
+      "true": "Medical Record",
+      "pred": "Medical Record",
+      "correct": true,
+      "confidence": 0.5009,
+      "method": "fusion_full"
+    },
+    {
+      "doc_id": "med_prescription",
+      "true": "Medical Record",
+      "pred": "Medical Record",
+      "correct": true,
+      "confidence": 0.5015,
+      "method": "fusion_full"
+    },
+    {
+      "doc_id": "med_insurance",
+      "true": "Medical Record",
+      "pred": "Medical Record",
+      "correct": true,
+      "confidence": 0.2482,
+      "method": "fusion_full"
+    },
+    {
+      "doc_id": "med_consent",
+      "true": "Medical Record",
+      "pred": "Medical Record",
+      "correct": true,
+      "confidence": 0.3669,
+      "method": "fusion_full"
+    },
+    {
+      "doc_id": "api_users",
+      "true": "API Log",
+      "pred": "API Log",
+      "correct": true,
+      "confidence": 0.5202,
+      "method": "fusion_full"
+    },
+    {
+      "doc_id": "api_orders",
+      "true": "API Log",
+      "pred": "API Log",
+      "correct": true,
+      "confidence": 0.498,
+      "method": "fusion_full"
+    },
+    {
+      "doc_id": "api_auth",
+      "true": "API Log",
+      "pred": "API Log",
+      "correct": true,
+      "confidence": 0.5025,
+      "method": "fusion_full"
+    },
+    {
+      "doc_id": "api_reports",
+      "true": "API Log",
+      "pred": "API Log",
+      "correct": true,
+      "confidence": 0.4834,
+      "method": "fusion_full"
+    },
+    {
+      "doc_id": "api_errors",
+      "true": "API Log",
+      "pred": "API Log",
+      "correct": true,
+      "confidence": 0.5004,
+      "method": "fusion_full"
+    },
+    {
+      "doc_id": "gen_meeting",
+      "true": "Email / Communication",
+      "pred": "Email / Communication",
+      "correct": true,
+      "confidence": 0.4373,
+      "method": "fusion_full"
+    },
+    {
+      "doc_id": "gen_roadmap",
+      "true": "Technical Document",
+      "pred": "Technical Document",
+      "correct": true,
+      "confidence": 0.3387,
+      "method": "fusion_full"
+    },
+    {
+      "doc_id": "gen_agenda",
+      "true": "Email / Communication",
+      "pred": "Email / Communication",
+      "correct": true,
+      "confidence": 0.4252,
+      "method": "fusion_full"
+    },
+    {
+      "doc_id": "gen_offsite",
+      "true": "Email / Communication",
+      "pred": "Email / Communication",
+      "correct": true,
+      "confidence": 0.3466,
+      "method": "fusion_full"
+    },
+    {
+      "doc_id": "gen_readme",
+      "true": "Technical Document",
+      "pred": "Technical Document",
+      "correct": true,
+      "confidence": 0.4024,
+      "method": "fusion_full"
+    },
+    {
+      "doc_id": "gen_spec",
+      "true": "Technical Document",
+      "pred": "Technical Document",
+      "correct": true,
+      "confidence": 0.3699,
+      "method": "fusion_full"
+    },
+    {
+      "doc_id": "gen_deploy",
+      "true": "Technical Document",
+      "pred": "Technical Document",
+      "correct": true,
+      "confidence": 0.3663,
+      "method": "fusion_full"
+    },
+    {
+      "doc_id": "gen_changelog",
+      "true": "Technical Document",
+      "pred": "Technical Document",
+      "correct": true,
+      "confidence": 0.4552,
+      "method": "fusion_full"
+    },
+    {
+      "doc_id": "gen_legal_memo",
+      "true": "Legal Document",
+      "pred": "Legal Document",
+      "correct": true,
+      "confidence": 0.4685,
+      "method": "fusion_full"
+    },
+    {
+      "doc_id": "gen_legal_nda",
+      "true": "Legal Document",
+      "pred": "Legal Document",
+      "correct": true,
+      "confidence": 0.4822,
+      "method": "fusion_full"
+    }
+  ]
+}
