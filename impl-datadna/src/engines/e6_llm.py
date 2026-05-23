@@ -50,7 +50,7 @@ class E6LLMEngine(BaseEngine):
         return self._client is not None
 
     def analyze(self, doc: Document) -> EngineOutput:
-        """Classify document using Mistral-7B.
+        """Classify document using Mistral-7B, constrained to known types only.
 
         Returns:
             EngineOutput with LLM-assigned label and confidence, or
@@ -70,10 +70,19 @@ class E6LLMEngine(BaseEngine):
             known_types = [
                 t.type_name for t in self._type_library.list_active()
             ]
-            response = self._client.classify(text, known_types)
+
+            # Build constrained prompt that forces known type selection
+            response = self._classify_constrained(text, known_types)
             label = response.get("label", "unknown")
             confidence = float(response.get("confidence", 0.0))
             is_new = bool(response.get("is_new_type", False))
+
+            # If LLM returned a label not in known types, find closest match
+            if label not in known_types and label != "unknown":
+                closest = self._closest_known_type(label, known_types)
+                if closest:
+                    label = closest
+                    confidence = max(0.0, confidence - 0.1)  # penalty for mismatch
 
             return EngineOutput(
                 engine_id=self.engine_id,
@@ -90,3 +99,58 @@ class E6LLMEngine(BaseEngine):
                 engine_id=self.engine_id,
                 status="unavailable",
             )
+
+    def _classify_constrained(
+        self, text: str, known_types: list[str]
+    ) -> dict:
+        """Call LLM with a prompt that forces selection from known types."""
+        types_list = "\n".join(f"- {t}" for t in known_types)
+
+        system = (
+            "You are a document classifier. You MUST choose exactly one type "
+            "from the known types list below. Do NOT invent new types. "
+            "If no type matches perfectly, pick the closest one. "
+            "Always respond with valid JSON."
+        )
+
+        truncated = text[:2000]
+        user = (
+            "<instruction>Classify this document into EXACTLY ONE of the "
+            "known types listed below. Do not create new types. Choose the "
+            "closest match even if imperfect.</instruction>\n"
+            f"<known_types>\n{types_list}\n</known_types>\n"
+            f"<document>{truncated}</document>\n"
+            "<output_schema>"
+            '{"label": "<one of the known types>", "confidence": 0.0-1.0, '
+            '"is_new_type": false, "rationale": "..."}'
+            "</output_schema>"
+        )
+
+        messages = [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ]
+        return self._client._call_llm(messages)
+
+    def _closest_known_type(
+        self, label: str, known_types: list[str]
+    ) -> str | None:
+        """Find the closest known type to an unknown label using simple word overlap."""
+        if not known_types:
+            return None
+
+        label_words = set(label.lower().split())
+        best_type = None
+        best_score = 0
+
+        for kt in known_types:
+            kt_words = set(kt.lower().split())
+            overlap = len(label_words & kt_words)
+            # Also check if one is substring of another
+            bonus = 2.0 if label.lower() in kt.lower() or kt.lower() in label.lower() else 0
+            score = overlap + bonus
+            if score > best_score:
+                best_score = score
+                best_type = kt
+
+        return best_type if best_score >= 1 else None
