@@ -38,15 +38,20 @@ class DistillationManager:
         self,
         e3_engine=None,
         config: dict | None = None,
+        min_deploy_f1: float = 0.70,
     ) -> None:
         """Initialize the distillation manager.
 
         Args:
             e3_engine: E3MLEngine instance for model deployment.
             config: Optional overrides for DistillationTrainer defaults.
+            min_deploy_f1: Minimum training Macro F1 to deploy (default 0.70).
+                Below this threshold the model is rejected — noisy SetFit
+                degrades accuracy rather than improving it.
         """
         self._e3_engine = e3_engine
         self._trainer = DistillationTrainer(config)
+        self._min_deploy_f1 = min_deploy_f1
 
         # Accumulate labeled documents by type
         self._labeled: dict[str, list[Document]] = defaultdict(list)
@@ -162,7 +167,26 @@ class DistillationManager:
 
         self._training_count += 1
 
-        # Step 3: Check F1 degradation vs current
+        # Step 3: Check absolute F1 quality gate
+        new_f1 = new_metrics.get("macro_f1", 0)
+        if new_f1 < self._min_deploy_f1:
+            logger.warning(
+                "SetFit training F1=%.3f below deploy threshold %.2f — "
+                "model rejected. Insufficient training data causes noisy "
+                "predictions that degrade accuracy.",
+                new_f1, self._min_deploy_f1,
+            )
+            return {
+                "trained": True,
+                "deployed": False,
+                "metrics": new_metrics,
+                "reason": (
+                    f"Training F1 ({new_f1:.3f}) below minimum "
+                    f"({self._min_deploy_f1:.2f}) — need more training data"
+                ),
+            }
+
+        # Step 4: Check F1 degradation vs current
         degraded = False
         if self._current_metrics is not None:
             degraded = self._trainer.check_degradation(
@@ -173,7 +197,7 @@ class DistillationManager:
                     "F1 degradation detected! New model rejected. "
                     "Old macro F1=%.3f, new macro F1=%.3f",
                     self._current_metrics.get("macro_f1", 0),
-                    new_metrics.get("macro_f1", 0),
+                    new_f1,
                 )
                 return {
                     "trained": True,
@@ -182,7 +206,7 @@ class DistillationManager:
                     "reason": "F1 degradation detected — human review required",
                 }
 
-        # Step 4: Deploy to E3 engine
+        # Step 5: Deploy to E3 engine
         if self._e3_engine is not None:
             self._e3_engine.set_model(model, self._trainer)
             logger.info(
@@ -202,11 +226,27 @@ class DistillationManager:
         }
 
     def force_train(self, texts: list[str], labels: list[str]) -> dict:
-        """Force training with explicit data (bypasses accumulation)."""
+        """Force training with explicit data (bypasses accumulation).
+
+        Still enforces the minimum F1 quality gate — low-quality models
+        are rejected even in force_train mode.
+        """
         try:
             model, metrics = self._trainer.train(texts, labels)
         except DistillationError as exc:
             return {"trained": False, "deployed": False, "reason": str(exc)}
+
+        new_f1 = metrics.get("macro_f1", 0)
+        if new_f1 < self._min_deploy_f1:
+            return {
+                "trained": True,
+                "deployed": False,
+                "metrics": metrics,
+                "reason": (
+                    f"Training F1 ({new_f1:.3f}) below minimum "
+                    f"({self._min_deploy_f1:.2f}) — need more training data"
+                ),
+            }
 
         if self._e3_engine is not None:
             self._e3_engine.set_model(model, self._trainer)
