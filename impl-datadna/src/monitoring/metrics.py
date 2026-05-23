@@ -159,3 +159,156 @@ class MetricsCollector:
             if current_p > 0 and baseline_p > 0:
                 kl += current_p * math.log(current_p / baseline_p)
         return kl
+
+
+class FusionValidator:
+    """2% sampling validation of fusion_fast decisions against LLM.
+
+    Per spec section 7: fusion_fast documents skip LLM (E1-E5 consensus >= 0.85).
+    To verify this consensus is reliable, 2% of fusion_fast documents are
+    sent to LLM for a consistency check.
+
+    If inconsistency rate > 5% -> alert: E1-E5 consensus quality may be degrading.
+
+    Usage:
+        validator = FusionValidator(sample_rate=0.02, llm_client=client)
+        validator.validate(result, document)  # only samples fusion_fast
+        report = validator.report()
+        if report["inconsistency_rate"] > 0.05:
+            logger.warning("ALERT: fusion_fast inconsistency rate elevated")
+    """
+
+    def __init__(
+        self,
+        sample_rate: float = 0.02,
+        inconsistency_threshold: float = 0.05,
+        llm_client=None,
+    ) -> None:
+        """Initialize the validator.
+
+        Args:
+            sample_rate: Fraction of fusion_fast docs to validate (default 2%).
+            inconsistency_threshold: Alert threshold (default 5%).
+            llm_client: MistralClient instance for validation calls.
+        """
+        self._sample_rate = sample_rate
+        self._inconsistency_threshold = inconsistency_threshold
+        self._llm_client = llm_client
+
+        self._total_fusion_fast: int = 0
+        self._sampled: int = 0
+        self._validated: int = 0
+        self._consistent: int = 0
+        self._inconsistent: int = 0
+        self._inconsistent_details: list[dict] = []
+
+    def should_validate(self, result) -> bool:
+        """Determine if this fusion_fast result should be sampled.
+
+        Uses deterministic sampling based on doc_id hash to ensure
+        the same document is always sampled (stable across runs).
+
+        Args:
+            result: FusionResult from the voter.
+
+        Returns:
+            True if this result should be validated by LLM.
+        """
+        # Only validate fusion_fast results
+        if result.method != "fusion_fast":
+            return False
+
+        self._total_fusion_fast += 1
+
+        # Deterministic sampling: hash doc_id for reproducibility
+        doc_hash = hash(result.doc_id) % 10000
+        threshold = int(self._sample_rate * 10000)
+        return doc_hash < threshold
+
+    def validate(self, result, document) -> dict | None:
+        """Validate a fusion_fast result against LLM.
+
+        Only actually validates if should_validate() returns True.
+
+        Args:
+            result: FusionResult from the voter.
+            document: The original Document.
+
+        Returns:
+            dict with keys: consistent, fusion_label, llm_label, rationale.
+            None if validation was skipped or LLM unavailable.
+        """
+        if not self.should_validate(result):
+            return None
+
+        self._sampled += 1
+
+        if self._llm_client is None:
+            return None
+
+        try:
+            from src.knowledge.type_library import get_type_library
+            type_lib = get_type_library()
+            known_types = [t.type_name for t in type_lib.list_active()]
+
+            response = self._llm_client.classify(
+                document.text, known_types
+            )
+            llm_label = response.get("label", "unknown")
+
+            self._validated += 1
+            is_consistent = (llm_label == result.final_label)
+
+            if is_consistent:
+                self._consistent += 1
+            else:
+                self._inconsistent += 1
+                self._inconsistent_details.append({
+                    "doc_id": result.doc_id,
+                    "fusion_label": result.final_label,
+                    "llm_label": llm_label,
+                    "fusion_confidence": result.composite_confidence,
+                    "llm_confidence": response.get("confidence", 0.0),
+                })
+
+            return {
+                "consistent": is_consistent,
+                "fusion_label": result.final_label,
+                "llm_label": llm_label,
+                "rationale": response.get("rationale", ""),
+            }
+        except Exception:
+            return None
+
+    def report(self) -> dict:
+        """Generate a validation report.
+
+        Returns:
+            dict with keys: total_fusion_fast, sampled, validated,
+            consistent, inconsistent, inconsistency_rate, alert.
+        """
+        inconsistency_rate = (
+            self._inconsistent / self._validated
+            if self._validated > 0
+            else 0.0
+        )
+
+        return {
+            "total_fusion_fast": self._total_fusion_fast,
+            "sampled": self._sampled,
+            "validated": self._validated,
+            "consistent": self._consistent,
+            "inconsistent": self._inconsistent,
+            "inconsistency_rate": round(inconsistency_rate, 4),
+            "alert": inconsistency_rate > self._inconsistency_threshold,
+            "inconsistent_details": self._inconsistent_details[-10:],
+        }
+
+    def reset(self) -> None:
+        """Reset counters for next monitoring window."""
+        self._total_fusion_fast = 0
+        self._sampled = 0
+        self._validated = 0
+        self._consistent = 0
+        self._inconsistent = 0
+        self._inconsistent_details.clear()
