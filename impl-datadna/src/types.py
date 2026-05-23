@@ -130,3 +130,65 @@ class PipelineResult:
 
     results: list[ClassificationResult] = field(default_factory=list)
     stats: dict = field(default_factory=dict)  # timing, tier counts, trigger rates
+
+
+@dataclass
+class EngineOutput:
+    """Output from a single classification engine.
+
+    Attributes:
+        engine_id: "E1_regex", "E2_template", etc.
+        label: Predicted document type, or None if engine had no output.
+        confidence: Engine's self-assessed confidence in [0, 1].
+        status: "matched" | "no_match" | "unavailable" | "skipped".
+        metadata: Engine-specific trace (rule name, hash, distance, etc.).
+    """
+
+    engine_id: str
+    label: str | None = None
+    confidence: float = 0.0
+    status: str = "unavailable"
+    metadata: dict = field(default_factory=dict)
+
+
+@dataclass
+class FusionResult:
+    """Output of the fusion voter for a single document.
+
+    Attributes:
+        doc_id: Document identifier.
+        final_label: The winning label after weighted voting.
+        composite_confidence: Normalized score in [0, 1].
+        method: "fusion_fast" (no LLM) or "fusion_full" (with LLM).
+        degraded: True if any engine was unavailable.
+        manual_review: True if confidence < 0.4 threshold.
+        engine_outputs: Per-engine outputs for audit trail.
+        label_scores: Score per label from fusion calculation.
+    """
+
+    doc_id: str
+    final_label: str
+    composite_confidence: float
+    method: str = "fusion_fast"
+    degraded: bool = False
+    manual_review: bool = False
+    engine_outputs: dict[str, EngineOutput] = field(default_factory=dict)
+    label_scores: dict[str, float] = field(default_factory=dict)
+
+
+@dataclass
+class AuditRecord:
+    """Full audit log entry for a single document classification.
+
+    JSON-serializable. Records every engine's output and the fusion decision.
+    Per spec section 8.
+    """
+
+    doc_id: str
+    timestamp: str
+    final_label: str
+    composite_confidence: float
+    method: str
+    degraded: bool
+    manual_review: bool
+    engines: dict = field(default_factory=dict)
