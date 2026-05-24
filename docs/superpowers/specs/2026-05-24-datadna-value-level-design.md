@@ -161,10 +161,13 @@ class ValueSource:
 
 ```
 抽样策略:
-  - 去重: 同一列的唯一值取前 100 个作为候选
-  - 分层: 按值的长度/字符集分布分层抽样
-  - 目标: 每列 5-20 个代表值
-  - 输出: 代表值列表 → 进入分类内核
+  1. 去重: 同一列的所有唯一值去重
+  2. 分层: 按值的长度/字符集分布分层 (等频分箱, 5-10 层)
+  3. 抽样: 每层随机取 min(ceil(20/n_layers), 层内总数) 个值
+  4. 合计: 每列 5-20 个代表值
+  5. 输出: 代表值列表 → 进入分类内核
+
+排序偏差防护: 不取"前N个", 每层内随机采样
 ```
 
 ### 3.5 真值表引擎（路径A）
@@ -181,9 +184,9 @@ class ValueSource:
 | `unsupportive_context` | 否定性上下文词命中 | 上下文匹配"test", "sample", "placeholder"等词数 | {0, 1, 2+} |
 | `pattern_frequency` | 模式在数据集中的频率 | 该模式在全量数据中出现次数的分位数 | [0-20%, 20-40%, 40-60%, 60-80%, 80-100%] |
 | `uniqueness_score` | 值的唯一性 | 数据集中该值出现次数 | {1, 2-5, 6-20, 21-100, 100+} |
-| `entity_type_hint` | NER 语义类型提示 (可选) | NER 对该值的实体判断 | {PERSON_NAME, ORGANIZATION, LOCATION, DATE, GENERIC_ENTITY, NONE} |
+| `entity_type_hint` | NER 语义类型提示 (可选) | NER 对该值的实体判断 | {PERSON_NAME, ORGANIZATION, LOCATION, GENERIC_ENTITY, NONE} |
 
-> `entity_type_hint` 仅当 NER 引擎可用时填充。对不含在敏感类型标注中的实体类型（如 DATE），视为 NONE。此维度帮助真值表区分"看起来像名字但实际是 API Key" 等歧义案例。
+> `entity_type_hint` 仅当 NER 引擎可用时填充。对不含在敏感类型标注中的实体类型视为 NONE。此维度帮助真值表区分"看起来像名字但实际是 API Key" 等歧义案例。
 
 #### 3.5.2 真值表结构
 
@@ -194,6 +197,12 @@ pandas MultiIndex DataFrame: 6维 (NER不可用时) 或 7维 (NER可用时) → 
 
 查询: O(1) via MultiIndex.loc
 插值: 缺失键 → KD-Tree 最近邻, O(log n)
+
+多类型匹配路由:
+  一个值可能被多种类型的正则同时匹配 (如 "US123456789" 同时匹配
+  PASSPORT 和 GENERIC_ID 的 regex)。此时分别查询每个候选类型的真值表，
+  取 highest confidence。若所有候选类型的 confidence < 0.3，
+  进入 LLM Classification。
 ```
 
 #### 3.5.3 校准流程
@@ -222,12 +231,11 @@ NER 输入: surrounding_text (值前后 ±100 字符上下文窗口)
 NER 输出: BIO 标签序列
 
 对目标值的具体位置:
-  - 值被标注为 B-PERSON / I-PERSON       → entity_type_hint = PERSON_NAME
-  - 值被标注为 B-ORG / I-ORG             → entity_type_hint = ORGANIZATION
-  - 值被标注为 B-LOC / I-LOC             → entity_type_hint = LOCATION
-  - 值被标注为 B-DATE / I-DATE           → entity_type_hint = DATE
-  - 值被标注为其他实体类型                  → entity_type_hint = GENERIC_ENTITY
-  - 值被标注为 O 或无实体覆盖              → entity_type_hint = NONE
+  - 值被标注为 B-NAME / I-NAME             → entity_type_hint = PERSON_NAME
+  - 值被标注为 B-ORG / I-ORG               → entity_type_hint = ORGANIZATION
+  - 值被标注为 B-ADDRESS / I-ADDRESS       → entity_type_hint = LOCATION
+  - 值被标注为其他实体类型                    → entity_type_hint = GENERIC_ENTITY
+  - 值被标注为 O 或无实体覆盖                → entity_type_hint = NONE
 
 对结构化值 (regex_strength > 0.7):
   NER 的 entity_type_hint 权重降低 — 强结构值主要由 regex_strength 主导
@@ -259,10 +267,14 @@ B-NAME, I-NAME, B-ADDRESS, I-ADDRESS, B-ORG, I-ORG, O
 
 ```
 融合公式:
-  weighted_confidence = α × truth_table_confidence + (1-α) × semantic_distance_score
+  1. 分数校准: truth_table_confidence 和 distance_score 分布不同
+     (前者为频率估计, 后者为几何距离)。融合前各自通过 Platt scaling
+     或 isotonic regression 映射到 [0,1] 校准概率空间。
+  2. weighted_confidence = α × calibrated_truth_table + (1-α) × calibrated_distance
 
   α 默认值: 0.7 (真值表权重更高，因为 6 维更丰富)
   α 在 Semantic Distancing 未启用时: 1.0 (完全依赖真值表)
+  α 在 Phase 3 完成后, 于 held-out 标注集上通过 grid search 校准 (最大化 Macro F1)
 
 NER 语义特征:
   NER 输出作为真值表的 `entity_type_hint` 维度 (第 7 维)，不提供独立 confidence 分数。
@@ -285,7 +297,9 @@ NER 语义特征:
 分类后验证:
   - 值被分为 SSN 但列名/路径含 "account", "email", "phone" → 冲突降信
   - 值被分为 CREDIT_CARD 但所在文本段含 "test transaction" → 标记审查
-  - 冲突 → confidence × 0.7 折扣 + flag 标记
+  - 冲突 → 路由降一级 (原本直接输出的进入 LLM Validation,
+    原本 Validation 的进入 Classification)，同时 flag 标记
+  - 折扣量由路由阈值自然决定, 不使用硬编码乘数
 ```
 
 ### 3.10 置信度路由阈值校准
@@ -312,7 +326,8 @@ class ValueClassification:
     value: str
     sensitive_type: str | None     # "SSN", "CREDIT_CARD", None=NON_SENSITIVE
     confidence: float
-    method: str                    # "truth_table" | "llm_validate" | "llm_classify"
+    method: str                    # "regex_only" | "truth_table" | "fusion" |
+                                    # "llm_validate" | "llm_classify"
     role: str | None               # "subject" | "identifier" | "reference"
     is_mock: bool
     needs_review: bool
@@ -446,11 +461,11 @@ LLM 响应超时 (>5s):
 #### 5.1.2 方案
 
 ```
-值 → PII 类型占位符替换:
-  "4111-1111-1111-1111"         → "[CREDIT_CARD_NUMBER]"
-  "123-45-6789"                 → "[SSN_VALUE]"
-  "john.doe@gmail.com"          → "[NAME_PART].[NAME_PART]@[EMAIL_DOMAIN]"
-  "GB29NWBK60161331926819"      → "[COUNTRY_CODE][CHECK_DIGITS][BANK_CODE][ACCOUNT_NUM]"
+值 → PII 类型占位符替换 (类型级, 不解析子结构):
+  "4111-1111-1111-1111"         → "[CREDIT_CARD]"
+  "123-45-6789"                 → "[SSN]"
+  "john.doe@gmail.com"          → "[EMAIL]"
+  "GB29NWBK60161331926819"      → "[IBAN]"
      ↓
 替换后文本 → E5-base / all-mpnet 嵌入 → [1×768] 向量
      ↓
@@ -464,9 +479,9 @@ LLM 响应超时 (>5s):
 #### 5.1.3 融合
 
 ```
-weighted_confidence = α × truth_table_confidence + (1-α) × distance_score
+weighted_confidence = α × calibrated_truth_table + (1-α) × calibrated_distance
 
-α 默认 0.7, Semantic Distancing 不可用时 α=1.0。α 在 Phase 3 完成后，于 held-out 标注集上通过 grid search 校准（最大化 Macro F1）
+α 默认 0.7, Semantic Distancing 不可用时 α=1.0。校准方法见 Section 3.7。
 ```
 
 ### 5.2 文件级聚类传播
@@ -857,7 +872,7 @@ Phase 3 聚类传播完成后:
 | Per-type Recall 漂移 | 时间滑动窗口 vs 基线 | 连续 3 窗口下降 > 10% (绝对值) |
 | FDR 估算 | 每 1000 值抽 20 **人工**标注 | 抽检 FDR > 0.15 |
 | 分布偏移 | 6 维特征 KL 散度 vs 校准基线 | KL > 0.5 |
-| 组件间冲突 | 真值表-NER 不一致率 | > 3σ 偏离历史均值 |
+| entity_type_hint 冲突 | NER entity_type_hint 与最终分类冲突率 | > 3σ 偏离历史均值 |
 | LLM 异常 | needs_review 率 | > 3σ 偏离 |
 | 缓冲池增长 | 候选新类型发现率 | > 基线 3σ (基线首周后自动计算) |
 | 传播质量 | 每簇 5% 列 × 3 值抽检 | 不一致率 > 10% |
