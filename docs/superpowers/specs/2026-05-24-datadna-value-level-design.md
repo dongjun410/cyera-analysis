@@ -3,7 +3,7 @@
 > **版本**: v1.0  
 > **日期**: 2026-05-24  
 > **定位**: 对标 Cyera DataDNA 的完整值级敏感数据分类引擎  
-> **架构**: 真值表+NER双评分融合 + LLM分层消歧 + Semantic Distancing + 文件级聚类传播 + 自学习闭环  
+> **架构**: 真值表评分 + NER语义特征 + Semantic Distancing并列评分 + LLM分层消歧 + 文件级聚类传播 + 自学习闭环  
 > **语言**: 英文优先，中文及多语言次之  
 > **状态**: 设计完成，待实施
 
@@ -20,7 +20,7 @@
 | P3 | **上下文内建于分类** | 真值表的 unsupportive_context 维度、虚假数据过滤器是分类决策的组成部分，不是后处理。上下文判断从第一天就参与置信度计算 |
 | P4 | **不确定时保守** | 置信度 < 阈值 → 升级到下一层，最低层走人工。阈值从标注数据对抗性验证校准 |
 | P5 | **分层消歧，非分层备份** | 真值表+NER 做初判，LLM Validation 消歧中等难度，LLM Classification 处理高难度。每层不可用只损失该难度区间，清晰样本不受影响 |
-| P6 | **结构走真值表，语义走NER** | 分界标准是可检测的结构模式（正则、校验位、固定格式），非值是否含字母。IBAN 和 API Key 有强结构，走真值表 |
+| P6 | **结构走真值表，语义信号靠NER增强** | NER 为真值表提供语义特征输入（entity_type_hint），不独立产出分类决策。分界标准是可检测的结构模式（正则、校验位、固定格式），非值是否含字母 |
 | P7 | **可证伪可审计** | 每个引擎有量化退出条件，每个分类决策全程可追溯 |
 | P8 | **内核接口批量优先** | `classify(values: List[Value]) -> List[Result]`，单值是特例。避免后期集成聚类传播时改接口 |
 | P9 | **规模靠减量不靠加速** | PB 级通过文件聚类降维（仅代表值进入分类内核），内核效率指标不与未实现的聚类层耦合 |
@@ -181,13 +181,16 @@ class ValueSource:
 | `unsupportive_context` | 否定性上下文词命中 | 上下文匹配"test", "sample", "placeholder"等词数 | {0, 1, 2+} |
 | `pattern_frequency` | 模式在数据集中的频率 | 该模式在全量数据中出现次数的分位数 | [0-20%, 20-40%, 40-60%, 60-80%, 80-100%] |
 | `uniqueness_score` | 值的唯一性 | 数据集中该值出现次数 | {1, 2-5, 6-20, 21-100, 100+} |
+| `entity_type_hint` | NER 语义类型提示 (可选) | NER 对该值的实体判断 | {PERSON_NAME, ORGANIZATION, LOCATION, DATE, GENERIC_ENTITY, NONE} |
+
+> `entity_type_hint` 仅当 NER 引擎可用时填充。对不含在敏感类型标注中的实体类型（如 DATE），视为 NONE。此维度帮助真值表区分"看起来像名字但实际是 API Key" 等歧义案例。
 
 #### 3.5.2 真值表结构
 
 ```
-pandas MultiIndex DataFrame: 6维 → confidence
-总状态数: 5×5×4×3×5×5 = 7500 组合
-实际非零: ~2000-3000
+pandas MultiIndex DataFrame: 6维 (NER不可用时) 或 7维 (NER可用时) → confidence
+总状态数: 6维 5×5×4×3×5×5 = 7500; 7维增加 ×6 ≈ 45000 组合
+实际非零: 6维 ~2000-3000; 7维 ~5000-8000
 
 查询: O(1) via MultiIndex.loc
 插值: 缺失键 → KD-Tree 最近邻, O(log n)
@@ -210,9 +213,30 @@ pandas MultiIndex DataFrame: 6维 → confidence
 
 ### 3.6 NER 引擎（语义特征源）
 
-NER 不为真值表提供独立的分类路径，而是提供语义特征。当 `regex_strength` 低时，NER 的语义标注提升置信度。
+NER 不为真值表提供独立的分类路径。其输出作为真值表的 `entity_type_hint` 维度（第 7 维），帮助区分语义歧义案例。
 
-#### 3.6.1 模型选型
+#### 3.6.1 特征计算
+
+```
+NER 输入: surrounding_text (值前后 ±100 字符上下文窗口)
+NER 输出: BIO 标签序列
+
+对目标值的具体位置:
+  - 值被标注为 B-PERSON / I-PERSON       → entity_type_hint = PERSON_NAME
+  - 值被标注为 B-ORG / I-ORG             → entity_type_hint = ORGANIZATION
+  - 值被标注为 B-LOC / I-LOC             → entity_type_hint = LOCATION
+  - 值被标注为 B-DATE / I-DATE           → entity_type_hint = DATE
+  - 值被标注为其他实体类型                  → entity_type_hint = GENERIC_ENTITY
+  - 值被标注为 O 或无实体覆盖              → entity_type_hint = NONE
+
+对结构化值 (regex_strength > 0.7):
+  NER 的 entity_type_hint 权重降低 — 强结构值主要由 regex_strength 主导
+
+对弱结构/无语义值 (regex_strength < 0.3):
+  entity_type_hint 成为区分 NAME vs API_KEY vs NON_SENSITIVE 的关键维度
+```
+
+#### 3.6.2 模型选型
 
 | 阶段 | 模型 | 用途 |
 |------|------|------|
@@ -220,7 +244,7 @@ NER 不为真值表提供独立的分类路径，而是提供语义特征。当 
 | 有标注后 | BERT-base (英文) / RoBERTa | 微调 BIO 序列标注 |
 | 蒸馏 | Qwen3:8b → BERT | 从 LLM 标注蒸馏 |
 
-#### 3.6.2 BIO 标签体系
+#### 3.6.3 BIO 标签体系
 
 ```
 B-SSN, I-SSN, B-CCN, I-CCN, B-EMAIL, I-EMAIL, B-PHONE, I-PHONE,
@@ -241,8 +265,8 @@ B-NAME, I-NAME, B-ADDRESS, I-ADDRESS, B-ORG, I-ORG, O
   α 在 Semantic Distancing 未启用时: 1.0 (完全依赖真值表)
 
 NER 语义特征:
-  NER 标注结果作为辅助信号增强 regex_strength 和 supportive_context 维度，
-  不直接提供独立 confidence 分数。
+  NER 输出作为真值表的 `entity_type_hint` 维度 (第 7 维)，不提供独立 confidence 分数。
+  NER 不可用时此维度填 NONE，真值表以 6 维模式运行。
 ```
 
 ### 3.8 角色判定
@@ -370,8 +394,10 @@ Classification 结果处理:
 ```
 批量策略:
   1. 收集中等置信度值 [v1, v2, ..., vn]
-  2. 并发发送 n 个 Validation 请求 (asyncio + Ollama batch)
-  3. 收集不通过的值 [vi, vj, ...]
+  2. FLAN-T5: transformers 内置 batch inference (tokenizer padding + model.generate batch)
+     Mistral: asyncio + Ollama batch API
+     两者异步并发
+  3. 收集 Validation 不通过的值 [vi, vj, ...]
   4. 并发发送 Classification 请求
   5. 聚合结果
 ```
@@ -492,7 +518,11 @@ for each file in data_sources:
 
 ```
 for each cluster:
-  1. 选代表文件 (离簇质心最近, n=3)
+  1. 选代表文件 (按文件大小/列数多样性选择 3 个)
+     哈希指纹聚类无向量空间，代表文件选择策略为:
+     - 优先选择不同文件大小的文件 (覆盖大/中/小文件)
+     - 优先选择不同列数的文件 (覆盖宽/窄表)
+     - 若无多样性差异, 随机选择
   2. 代表文件 → 值提取 → 分类内核 → classifications
   3. majority_type = majority_vote(classifications)
   4. consistency = majority_count / total
@@ -537,8 +567,9 @@ A. 新兴重复模式:
 B. 真值表盲区:
    truth_table_confidence < 0.3 AND regex_strength > 0.7
 
-C. 列名-分类冲突:
-   真值表分为 type_A AND 列名模板嵌入与 type_B 更近 (cos_sim > 0.7, A ≠ B)
+C. label_hint-分类冲突 (适用所有数据源):
+   真值表分为 type_A AND 值的 label_hint 在模板嵌入中与 type_B 更近 (cos_sim > 0.7, A ≠ B)
+   label_hint 对结构化源=列名/字段名，非结构化源=提取时的上下文键名
 
 缓冲池: 最多 200 个候选模式 (LRU淘汰), 去重
 ```
@@ -592,7 +623,6 @@ C. 列名-分类冲突:
    系统级:
      - E2E Macro Recall ≥ 0.85
      - Uncertain 率 < 0.30
-     - 真值表-NER 一致率 > 60%
    Gate 不通过 → 回滚, 标记 uncertain, 等待更多数据
 
 5. 闭环延迟窗口:
@@ -845,7 +875,7 @@ Phase 3 聚类传播完成后:
 | Mistral Classification | 200 题标准分类题集 accuracy < 0.85 | 独立分类题集 |
 | 聚类传播 | 传播后抽检不一致率 > 10% | 每簇 5% 列 × 3 值 |
 | Learned Classification | 自动验证层通过率 < 70% | 提议类型总数 / 自动通过数 |
-| **系统级** | E2E Macro Recall < 0.85 或 uncertain 率 > 0.30 或组件间一致率 < 60% | held-out 全类别集 |
+| **系统级** | E2E Macro Recall < 0.85 或 uncertain 率 > 0.30 | held-out 全类别集 |
 
 ### 8.3 R 要求状态总览
 
