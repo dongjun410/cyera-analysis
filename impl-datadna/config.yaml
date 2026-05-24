@@ -27,7 +27,7 @@ knn:
 # ── E6 LLM ──
 llm:
   api_base: "http://localhost:11434/v1"
-  model: "qwen2.5:7b"
+  model: "qwen3:8b"
   quantization: "4bit"
   temperature: 0.3
   max_input_chars: 2000
