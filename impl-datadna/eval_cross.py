@@ -157,17 +157,18 @@ def run_eval(comp: dict, texts: list[str], labels: list[str], name: str) -> dict
     voter = comp["voter"]
     type_lib = get_type_library()
 
-    # ── Register dataset labels into TypeLibrary ──
+    # ── Replace TypeLibrary with ONLY dataset labels ──
     # This simulates configuring the system with the customer's actual
-    # document taxonomy before running classification.
+    # document taxonomy. All builtin types are removed to avoid label
+    # conflicts (e.g., "Financial Report" vs "Financial & Accounting").
+    for info in list(type_lib._types.values()):
+        type_lib.remove(info.type_id)
     unique_labels = sorted(set(labels))
     for lbl in unique_labels:
         tid = lbl.lower().replace(" ", "_").replace(".", "_").replace("/", "_")[:50]
-        existing = type_lib.get(tid)
-        if existing is None:
-            type_lib.register(tid, lbl, source="builtin")
-    logger.info("  Registered %d labels into TypeLibrary (now %d total types)",
-                len(unique_labels), type_lib.count)
+        type_lib.register(tid, lbl, source="builtin")
+    logger.info("  Replaced TypeLibrary with %d dataset labels",
+                len(unique_labels))
 
     y_true, y_pred = [], []
     fast_n, full_n, degraded_n = 0, 0, 0
@@ -232,8 +233,8 @@ def main() -> int:
                         help="Single dataset to evaluate")
     parser.add_argument("--all", action="store_true",
                         help="Run both datasets, compute R1")
-    parser.add_argument("--size", type=int, default=1000,
-                        help="Sample size for 20newsgroups")
+    parser.add_argument("--size", type=int, default=100,
+                        help="Sample size for 20newsgroups (default: 100)")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--output", default="./eval_output/")
     parser.add_argument("--config", default="config.yaml")

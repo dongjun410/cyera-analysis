@@ -9,24 +9,24 @@
         "support": 50
       },
       "Human Resources & Payroll": {
-        "precision": 0.9773,
-        "recall": 0.819,
-        "f1": 0.8912,
+        "precision": 1.0,
+        "recall": 0.8857,
+        "f1": 0.9394,
         "support": 105
       },
       "Legal & Compliance": {
-        "precision": 0.0,
-        "recall": 0.0,
-        "f1": 0.0,
+        "precision": 0.9714,
+        "recall": 0.9903,
+        "f1": 0.9808,
         "support": 103
       }
     },
-    "macro_precision": 0.6131,
-    "macro_recall": 0.6063,
-    "macro_f1": 0.6057,
+    "macro_precision": 0.9445,
+    "macro_recall": 0.9587,
+    "macro_f1": 0.9487,
     "total": 258,
-    "correct": 136,
-    "accuracy": 0.5271,
+    "correct": 245,
+    "accuracy": 0.9496,
     "name": "cxh5types",
     "method_distribution": {
       "fusion_fast": 0,
@@ -34,16 +34,16 @@
     },
     "llm_call_rate": 1.0,
     "degraded_rate": 1.0,
-    "total_time_s": 250.3,
-    "avg_ms_per_doc": 970.0,
-    "p50_ms": 928.3,
-    "p95_ms": 1311.4
+    "total_time_s": 444.2,
+    "avg_ms_per_doc": 1722.0,
+    "p50_ms": 1696.6,
+    "p95_ms": 2137.0
   },
   "engine_status": {
     "E1_regex": true,
     "E2_template": true,
     "E3_ml": false,
-    "E4_knn": true,
+    "E4_knn": false,
     "E5_structural": true,
     "E6_llm": true
   },
@@ -53,7 +53,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -61,7 +61,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -69,7 +69,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -77,7 +77,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -85,7 +85,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -93,7 +93,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -101,7 +101,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -109,7 +109,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -117,7 +117,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -125,7 +125,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -133,7 +133,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -141,7 +141,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -149,7 +149,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -157,7 +157,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -165,7 +165,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -173,7 +173,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -181,7 +181,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -189,7 +189,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -197,7 +197,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -205,7 +205,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -213,7 +213,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -221,7 +221,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -229,7 +229,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -237,7 +237,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -245,7 +245,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -253,7 +253,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -261,7 +261,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -269,7 +269,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -277,7 +277,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -285,7 +285,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3448,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
@@ -293,7 +293,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -301,7 +301,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -309,7 +309,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -317,7 +317,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -325,7 +325,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3103,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -333,7 +333,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -341,7 +341,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -349,7 +349,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -357,7 +357,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -365,7 +365,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -373,7 +373,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -381,7 +381,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -389,7 +389,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -397,7 +397,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -405,7 +405,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -413,7 +413,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -421,7 +421,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -429,7 +429,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -437,7 +437,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -445,15 +445,15 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00050",
       "true": "Human Resources & Payroll",
-      "pred": "Financial & Accounting",
-      "correct": false,
-      "confidence": 0.3276,
+      "pred": "Human Resources & Payroll",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -461,7 +461,7 @@
       "true": "Financial & Accounting",
       "pred": "Financial & Accounting",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -469,7 +469,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3448,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -477,7 +477,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
@@ -485,7 +485,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3448,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
@@ -493,7 +493,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3448,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
@@ -501,15 +501,15 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00057",
       "true": "Human Resources & Payroll",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.2931,
+      "pred": "Human Resources & Payroll",
+      "correct": true,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
@@ -517,7 +517,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
@@ -525,7 +525,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
@@ -533,15 +533,15 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3333,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00061",
       "true": "Human Resources & Payroll",
-      "pred": "Marketing Document",
+      "pred": "Email / Communication",
       "correct": false,
-      "confidence": 0.4102,
+      "confidence": 0.0833,
       "method": "fusion_full"
     },
     {
@@ -549,15 +549,15 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00063",
       "true": "Human Resources & Payroll",
-      "pred": "Technical Document",
+      "pred": "Legal & Compliance",
       "correct": false,
-      "confidence": 0.3276,
+      "confidence": 0.3333,
       "method": "fusion_full"
     },
     {
@@ -565,7 +565,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -573,15 +573,15 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00066",
       "true": "Human Resources & Payroll",
-      "pred": "Technical Document",
-      "correct": false,
-      "confidence": 0.4148,
+      "pred": "Human Resources & Payroll",
+      "correct": true,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
@@ -589,7 +589,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
@@ -597,15 +597,15 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00069",
       "true": "Human Resources & Payroll",
-      "pred": "Marketing Document",
-      "correct": false,
-      "confidence": 0.4131,
+      "pred": "Human Resources & Payroll",
+      "correct": true,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
@@ -613,7 +613,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
@@ -621,7 +621,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3333,
       "method": "fusion_full"
     },
     {
@@ -629,23 +629,23 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00073",
       "true": "Human Resources & Payroll",
-      "pred": "Technical Document",
+      "pred": "Financial Report",
       "correct": false,
-      "confidence": 0.4074,
+      "confidence": 0.1771,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00074",
       "true": "Human Resources & Payroll",
-      "pred": "Technical Document",
+      "pred": "Legal & Compliance",
       "correct": false,
-      "confidence": 0.4885,
+      "confidence": 0.3333,
       "method": "fusion_full"
     },
     {
@@ -653,7 +653,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
@@ -661,7 +661,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
@@ -669,23 +669,23 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3103,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00078",
       "true": "Human Resources & Payroll",
-      "pred": "Human Resources & Payroll",
-      "correct": true,
-      "confidence": 0.3276,
+      "pred": "Financial & Accounting",
+      "correct": false,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00079",
       "true": "Human Resources & Payroll",
-      "pred": "Resume",
-      "correct": false,
-      "confidence": 0.3276,
+      "pred": "Human Resources & Payroll",
+      "correct": true,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
@@ -693,7 +693,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
@@ -701,7 +701,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
@@ -709,7 +709,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.2931,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
@@ -717,7 +717,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3103,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
@@ -725,7 +725,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -733,7 +733,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -741,15 +741,15 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00087",
       "true": "Human Resources & Payroll",
-      "pred": "Technical Document",
-      "correct": false,
-      "confidence": 0.4159,
+      "pred": "Human Resources & Payroll",
+      "correct": true,
+      "confidence": 0.3333,
       "method": "fusion_full"
     },
     {
@@ -757,7 +757,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3333,
       "method": "fusion_full"
     },
     {
@@ -765,15 +765,15 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00090",
       "true": "Human Resources & Payroll",
-      "pred": "Human Resources & Payroll",
-      "correct": true,
-      "confidence": 0.2931,
+      "pred": "Legal & Compliance",
+      "correct": false,
+      "confidence": 0.3333,
       "method": "fusion_full"
     },
     {
@@ -781,7 +781,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3103,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
@@ -789,15 +789,15 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3333,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00093",
       "true": "Human Resources & Payroll",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.2931,
+      "pred": "Human Resources & Payroll",
+      "correct": true,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
@@ -805,7 +805,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
@@ -813,7 +813,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
@@ -821,7 +821,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
@@ -829,7 +829,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
@@ -837,7 +837,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -845,7 +845,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
@@ -853,7 +853,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -861,7 +861,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
@@ -869,15 +869,15 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00103",
       "true": "Human Resources & Payroll",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.2931,
+      "pred": "Human Resources & Payroll",
+      "correct": true,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
@@ -885,7 +885,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
@@ -893,7 +893,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -901,7 +901,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Financial & Accounting",
       "correct": false,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -909,7 +909,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Financial & Accounting",
       "correct": false,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -917,7 +917,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Financial & Accounting",
       "correct": false,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -925,7 +925,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Financial & Accounting",
       "correct": false,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -933,7 +933,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3448,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
@@ -941,15 +941,15 @@
       "true": "Human Resources & Payroll",
       "pred": "Financial & Accounting",
       "correct": false,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00112",
       "true": "Human Resources & Payroll",
-      "pred": "Human Resources & Payroll",
-      "correct": true,
-      "confidence": 0.3276,
+      "pred": "Financial & Accounting",
+      "correct": false,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -957,7 +957,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3448,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -965,7 +965,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3448,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
@@ -973,7 +973,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3448,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
@@ -981,15 +981,15 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00117",
       "true": "Human Resources & Payroll",
-      "pred": "Financial & Accounting",
-      "correct": false,
-      "confidence": 0.3276,
+      "pred": "Human Resources & Payroll",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -997,7 +997,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3448,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
@@ -1005,7 +1005,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -1013,7 +1013,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3448,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
@@ -1021,7 +1021,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -1029,7 +1029,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3448,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
@@ -1037,7 +1037,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -1045,7 +1045,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3448,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
@@ -1053,7 +1053,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
@@ -1061,7 +1061,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3448,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
@@ -1069,7 +1069,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3448,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
@@ -1077,7 +1077,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
@@ -1085,7 +1085,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3448,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
@@ -1093,7 +1093,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3448,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
@@ -1101,7 +1101,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3448,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
@@ -1109,7 +1109,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -1117,7 +1117,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -1125,7 +1125,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3448,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
@@ -1133,7 +1133,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
@@ -1141,7 +1141,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3448,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
@@ -1149,7 +1149,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3448,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
@@ -1157,7 +1157,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3448,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -1165,7 +1165,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
@@ -1173,7 +1173,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3448,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
@@ -1181,7 +1181,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3448,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
@@ -1189,7 +1189,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
@@ -1197,7 +1197,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3448,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
@@ -1205,7 +1205,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3448,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
@@ -1213,7 +1213,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3448,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
@@ -1221,7 +1221,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3448,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
@@ -1229,7 +1229,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3276,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
@@ -1237,15 +1237,15 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3448,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00149",
       "true": "Human Resources & Payroll",
-      "pred": "Financial & Accounting",
-      "correct": false,
-      "confidence": 0.3276,
+      "pred": "Human Resources & Payroll",
+      "correct": true,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
@@ -1253,7 +1253,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3448,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
@@ -1261,7 +1261,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3448,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
@@ -1269,7 +1269,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3448,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
@@ -1277,7 +1277,7 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3448,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
@@ -1285,831 +1285,831 @@
       "true": "Human Resources & Payroll",
       "pred": "Human Resources & Payroll",
       "correct": true,
-      "confidence": 0.3448,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00155",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.426,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00156",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4397,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00157",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.3849,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00158",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4193,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00159",
       "true": "Legal & Compliance",
-      "pred": "Technical Document",
-      "correct": false,
-      "confidence": 0.3276,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00160",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.5587,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00161",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.5533,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00162",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.5539,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00163",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.55,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00164",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.5526,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00165",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4265,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00166",
       "true": "Legal & Compliance",
-      "pred": "Technical Document",
-      "correct": false,
-      "confidence": 0.3103,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00167",
       "true": "Legal & Compliance",
-      "pred": "Real Estate Document",
-      "correct": false,
-      "confidence": 0.4269,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00168",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.3276,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00169",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.5477,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00170",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.5536,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00171",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.5543,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00172",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.5514,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00173",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.553,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00174",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4233,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00175",
       "true": "Legal & Compliance",
-      "pred": "Human Resources & Payroll",
-      "correct": false,
-      "confidence": 0.3276,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00176",
       "true": "Legal & Compliance",
-      "pred": "Medical Record",
-      "correct": false,
-      "confidence": 0.4302,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00177",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4191,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00178",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4292,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00179",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4257,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00180",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4298,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00181",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4288,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00182",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4265,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00183",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4227,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00184",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4569,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00185",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4255,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00186",
       "true": "Legal & Compliance",
-      "pred": "comp.sys.ibm.pc.hardware",
-      "correct": false,
-      "confidence": 0.2931,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00187",
       "true": "Legal & Compliance",
-      "pred": "Human Resources & Payroll",
-      "correct": false,
-      "confidence": 0.3276,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00188",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4271,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00189",
       "true": "Legal & Compliance",
-      "pred": "Technical Document",
-      "correct": false,
-      "confidence": 0.3846,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00190",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4256,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00191",
       "true": "Legal & Compliance",
-      "pred": "Technical Document",
-      "correct": false,
-      "confidence": 0.2931,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00192",
       "true": "Legal & Compliance",
-      "pred": "Real Estate Document",
-      "correct": false,
-      "confidence": 0.3276,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00193",
       "true": "Legal & Compliance",
-      "pred": "Real Estate Document",
-      "correct": false,
-      "confidence": 0.3276,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00194",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.426,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00195",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4243,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00196",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4262,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00197",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4216,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.4167,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00198",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4244,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00199",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4265,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00200",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4246,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00201",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4231,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00202",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.5526,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00203",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.5555,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00204",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.5497,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00205",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.5483,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00206",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.5551,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00207",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4269,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00208",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4294,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00209",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4231,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00210",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4273,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00211",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4269,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00212",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4272,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00213",
       "true": "Legal & Compliance",
-      "pred": "Technical Document",
-      "correct": false,
-      "confidence": 0.3276,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00214",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4284,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00215",
       "true": "Legal & Compliance",
-      "pred": "Technical Document",
-      "correct": false,
-      "confidence": 0.3276,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00216",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.5379,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00217",
       "true": "Legal & Compliance",
-      "pred": "Technical Document",
-      "correct": false,
-      "confidence": 0.3276,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00218",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.5385,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00219",
       "true": "Legal & Compliance",
-      "pred": "Government Form",
-      "correct": false,
-      "confidence": 0.2931,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00220",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4171,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00221",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4192,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00222",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4217,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00223",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4483,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00224",
       "true": "Legal & Compliance",
-      "pred": "Technical Document",
-      "correct": false,
-      "confidence": 0.4069,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00225",
       "true": "Legal & Compliance",
-      "pred": "Adult Content",
-      "correct": false,
-      "confidence": 0.3276,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00226",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.3276,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00227",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.409,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00228",
       "true": "Legal & Compliance",
-      "pred": "E-commerce Website",
-      "correct": false,
-      "confidence": 0.3103,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00229",
       "true": "Legal & Compliance",
-      "pred": "Email / Communication",
-      "correct": false,
-      "confidence": 0.2931,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00230",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.2931,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3333,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00231",
       "true": "Legal & Compliance",
-      "pred": "Email / Communication",
-      "correct": false,
-      "confidence": 0.2931,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.375,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00232",
       "true": "Legal & Compliance",
-      "pred": "alt.atheism",
-      "correct": false,
-      "confidence": 0.2414,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00233",
       "true": "Legal & Compliance",
-      "pred": "Email / Communication",
-      "correct": false,
-      "confidence": 0.3276,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00234",
       "true": "Legal & Compliance",
-      "pred": "Website Policy",
-      "correct": false,
-      "confidence": 0.2931,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00235",
       "true": "Legal & Compliance",
-      "pred": "Email / Communication",
-      "correct": false,
-      "confidence": 0.3103,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00236",
       "true": "Legal & Compliance",
-      "pred": "Email / Communication",
-      "correct": false,
-      "confidence": 0.3556,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00237",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.5432,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00238",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4483,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00239",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4483,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00240",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.3972,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00241",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4144,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00242",
       "true": "Legal & Compliance",
-      "pred": "Technical Document",
-      "correct": false,
-      "confidence": 0.4151,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00243",
       "true": "Legal & Compliance",
-      "pred": "Technical Document",
-      "correct": false,
-      "confidence": 0.3793,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3333,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00244",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.3276,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00245",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.5415,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00246",
       "true": "Legal & Compliance",
-      "pred": "Technical Document",
+      "pred": "Financial & Accounting",
       "correct": false,
-      "confidence": 0.4206,
+      "confidence": 0.3333,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00247",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.5092,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00248",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.3276,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00249",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4569,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00250",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.3276,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00251",
       "true": "Legal & Compliance",
-      "pred": "Government Form",
-      "correct": false,
-      "confidence": 0.3103,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00252",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4216,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00253",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4397,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00254",
       "true": "Legal & Compliance",
-      "pred": "Technical Document",
-      "correct": false,
-      "confidence": 0.3751,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00255",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4483,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3958,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00256",
       "true": "Legal & Compliance",
-      "pred": "Technical Document",
-      "correct": false,
-      "confidence": 0.3276,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3542,
       "method": "fusion_full"
     },
     {
       "doc_id": "cxh5types_00257",
       "true": "Legal & Compliance",
-      "pred": "Legal Document",
-      "correct": false,
-      "confidence": 0.4144,
+      "pred": "Legal & Compliance",
+      "correct": true,
+      "confidence": 0.3542,
       "method": "fusion_full"
     }
   ]

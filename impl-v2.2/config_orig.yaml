@@ -1,0 +1,105 @@
+# V2.2 全局配置
+# 企业文档智能聚类系统
+
+embedding:
+  model_name: "BAAI/bge-m3"
+  local_model_path: "/opt/models/bge-m3"
+  device: "cuda"
+  max_token_length: 8192
+  batch_size: 32
+
+document:
+  chunk_size: 1024
+  chunk_overlap: 100
+  min_content_length: 100
+  supported_formats: [".pdf", ".docx", ".txt", ".md", ".xlsx", ".pptx", ".eml"]
+
+structure_features:
+  enabled: true
+  count_email: true
+  count_phone: true
+  count_credit_card: true
+  count_ssn: true
+  count_date: true
+  count_amount: true
+  count_ip: true
+  count_url: true
+  count_passport: true
+  extract_doc_structure: true
+  normalize: true
+
+pii_preclassifier:
+  enabled: true
+  engine: "presidio"
+  confidence_threshold: 0.8
+  supported_entities:
+    - EMAIL_ADDRESS
+    - PHONE_NUMBER
+    - CREDIT_CARD
+    - IBAN_CODE
+    - US_SSN
+    - US_PASSPORT
+
+clustering:
+  method: "kmeans"
+  auto_k: true
+  k_range: [10, 200]
+  k_step: 5
+  random_state: 42
+  split_enabled: true
+  split_threshold: 0.65
+  min_cluster_size: 2
+  small_cluster_threshold: 5
+  small_cluster_min_coherence: 0.80
+  max_iterations: 3
+  convergence_threshold: 0.02
+  sensitivity_adaptive:
+    enabled: true
+    tier_thresholds: [0.3, 0.7]
+    weights: [2.0, 3.0, 8.0, 10.0, 7.0, 0.5, 1.0, 1.0, 4.0, 1.5]
+
+label_propagation:
+  sample_per_cluster: 5
+  use_llm: true
+
+llm:
+  api_base: "http://localhost:11434/v1"
+  model: "qwen2.5:7b"
+  max_tokens: 512
+  temperature: 0.3
+
+quality:
+  enabled: true
+  metrics: ["silhouette", "davies_bouldin", "calinski_harabasz"]
+
+elasticsearch:
+  host: "localhost"
+  port: 9200
+  index_name: "doc_clusters_v2"
+  vector_dims: 1043  # 1024 (BGE-M3 semantic) + 19 (structure features)
+  similarity: "cosine"
+  index_type: "hnsw"
+
+learned_classifier:
+  enabled: true
+  model_dir: "./classifiers/model"
+  label_map_path: "./classifiers/label_map.json"
+  labeling:
+    samples_per_cluster: 10
+    min_cluster_size: 3
+    confidence_threshold: 0.7
+    max_concurrent_requests: 5
+  training:
+    base_model: "BAAI/bge-m3"
+    num_epochs: 3
+    batch_size: 16
+    min_samples_per_class: 5
+    max_samples_per_class: 200
+    eval_split: 0.2
+  inference:
+    use_classifier_first: true
+    classifier_confidence_threshold: 0.8
+    llm_fallback: true
+  incremental:
+    retrain_trigger: 500
+    retrain_strategy: "full"
