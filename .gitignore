@@ -9,3 +9,6 @@
 # OS files
 .DS_Store
 Thumbs.db
+
+# Sensitive implementation plans (local only)
+企业文档智能聚类系统*.md
