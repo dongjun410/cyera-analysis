@@ -348,6 +348,11 @@ clustering:
   spot_check_ratio: 0.05
   spot_check_values_per_column: 3
   inconsistency_threshold: 0.10
+  # Path B 增量专用阈值 (Section 2.5 路径B)
+  incremental_spot_check_ratio: 0.03
+  incremental_inconsistency_threshold: 0.05
+  buffer_timeout_minutes: 60
+  buffer_min_size: 500
 
 discovery:
   buffer_max_size: 200
@@ -380,6 +385,8 @@ git commit -m "feat: add configuration skeleton"
 ---
 
 ### Task 1A.4：非结构化值提取器
+
+> **注意**: Task 1A.4 在文档中先于 1A.1-1A.3 展示仅因非结构化提取器需引用 PII 正则模式库 (Task 1B.1) 作为依赖，与其代码引用 `src.knowledge.pii_patterns` 一致。实际开发顺序：Phase 0 → 1A.1/1A.2/1A.3/1B.1 → 1A.4。1A.4 与 1A.1-1A.3 互不依赖，可在 1B.1 完成后并行。
 
 **依赖:** Phase 0 完成
 **Files:**
@@ -559,10 +566,11 @@ git commit -m "feat: add unstructured value extractor (PDF/text/code/email)"
 
 ---
 
-### Task 1A.1-3：结构化提取器 / Mock 过滤 / 抽样 (上文定义)
+### Task 1A.1-3：结构化提取器 / Mock 过滤 / 抽样
 
-**依赖:** Phase 0 完成  
-**可并行:** 与 Phase 1B/1C/2A/3A/3B 并行
+**依赖:** Phase 0 完成
+**可并行:** 与 Phase 1B/1C/2A/3A/3B/6 并行
+**说明:** 1A.1-1A.3 构成值提取与预处理体系的核心，与 1A.4 (非结构化提取器) 互不依赖。
 
 ### Task 1A.1：结构化值提取器
 
@@ -1120,6 +1128,13 @@ class FeatureExtractor:
     def __init__(self, config: dict):
         self.patterns = PII_PATTERNS
         self.regex_cache: Dict[str, re.Pattern] = {}
+        # validated_count 冷启动权重 (Section 3.5.1)
+        # cold start: w_synth=1.0, w_real=0
+        # 真实数据积累后，KL 偏移触发 w_synth 衰减
+        self.w_synth: float = 1.0
+        self.w_real: float = 0.0
+        self._synth_counts: Dict[str, int] = {}    # type_name → synth count
+        self._real_counts: Dict[str, int] = {}      # type_name → real confirmed count
 
     def _get_regex(self, type_name: str) -> re.Pattern | None:
         if type_name in self.regex_cache:
@@ -1235,6 +1250,38 @@ class FeatureExtractor:
             },
             "value_counts": dict(value_counts),
         }
+
+    def set_synth_counts(self, counts: Dict[str, int]):
+        """冷启动时设置各类型合成数据量 (Section 3.5.1: 每类型 2000 → 50+ 桶)"""
+        self._synth_counts = counts
+
+    def record_real_confirmation(self, type_name: str, count: int = 1):
+        """记录 LLM/人工确认的真实数据量"""
+        self._real_counts[type_name] = self._real_counts.get(type_name, 0) + count
+
+    def update_validated_count_weights(self, kl_alerts: dict):
+        """
+        分布偏移触发 w_synth 衰减 (Section 3.5.1 + Section 7.4)。
+        KL > 0.5 告警 → 衰减 w_synth, 提升真实数据权重。
+        """
+        if not kl_alerts:
+            return  # 无偏移告警, 保持当前权重
+
+        # KL 散度偏移 → 合成数据可能已不适配当前环境
+        max_kl = max(kl_alerts.values()) if kl_alerts else 0.0
+        decay_factor = min(1.0, max_kl / 0.5)  # KL=0.5 → 开始衰减, KL=1.0 → 完全切换
+        self.w_synth = max(0.0, 1.0 - decay_factor)
+        self.w_real = min(1.0, decay_factor)
+
+    def get_effective_validated_count(self, type_name: str) -> float:
+        """
+        加权计算 validated_count (Section 3.5.1):
+        score = w_synth × count_synth + w_real × count_real
+        离散化后用于真值表 bin 查询。
+        """
+        synth = self._synth_counts.get(type_name, 0)
+        real = self._real_counts.get(type_name, 0)
+        return self.w_synth * synth + self.w_real * real
 ```
 
 - [ ] **Step 3: Commit**
@@ -3142,6 +3189,7 @@ class LabelPropagator:
 
 ```python
 # src/orchestrator.py — 三路径编排器
+import time
 from typing import List
 from src.types import DataValue, ValueClassification
 from src.classifiers.cache import ClassificationCache
@@ -3165,6 +3213,13 @@ class DataDNAOrchestrator:
         self.propagator = LabelPropagator(config)
         self.structured_extractor = StructuredExtractor()
         self.unstructured_extractor = UnstructuredExtractor()
+        # Path B 增量配置
+        cfg = config.get("clustering", {})
+        self.buffer_timeout = cfg.get("buffer_timeout_minutes", 60) * 60  # 转为秒
+        self.buffer_min_size = cfg.get("buffer_min_size", 500)
+        self.incremental_spot_check_ratio = cfg.get("incremental_spot_check_ratio", 0.03)
+        self.incremental_inconsistency_threshold = cfg.get("incremental_inconsistency_threshold", 0.05)
+        self._buffer_last_process_time = time.time()
 
     # ── Path A: 离线全量 ────────────────────────────────────
 
@@ -3241,22 +3296,47 @@ class DataDNAOrchestrator:
             else:
                 buffer.append(fp)
 
-        # Step 3: 缓冲队列 (累积 ≥ 500 或 > 1h → 小批量聚类)
-        if len(buffer) >= 500:
+        # Step 3: 缓冲队列 (累积 ≥ buffer_min_size 或距上次处理 > buffer_timeout → 小批量聚类)
+        time_since_last = time.time() - self._buffer_last_process_time
+        if len(buffer) >= self.buffer_min_size or (
+            len(buffer) > 0 and time_since_last > self.buffer_timeout
+        ):
             mini_results = self.run_path_a_full_scan(buffer)
             results.update(mini_results)
+            buffer.clear()
+            self._buffer_last_process_time = time.time()
 
         # Step 4: 定期抽检 (3% 增量继承文件走完整验证)
+        # 不一致率 > 5% → 触发该簇全量重分类 (Section 2.5 路径B)
         import random
         spot_check_files = random.sample(
             list(results.keys()),
-            min(max(1, int(len(results) * 0.03)), len(results)),
+            min(max(1, int(len(results) * self.incremental_spot_check_ratio)), len(results)),
         )
+        mismatches = 0
+        total_checked = 0
         for fp in spot_check_files:
-            values = self.structured_extractor.extract(fp) if fp.endswith('.csv') \
-                else self.unstructured_extractor.extract(fp)
-            cls_results = self.kernel.classify_batch(values)
-            # 比对...如果不一致率 > 5% → 触发该簇全量重分类
+            try:
+                values = self.structured_extractor.extract(fp) if fp.endswith('.csv') \
+                    else self.unstructured_extractor.extract(fp)
+                cls_results = self.kernel.classify_batch(values)
+                expected = results.get(fp, {}).get("label", "")
+                actual_types = [r.sensitive_type for r in cls_results if r.sensitive_type]
+                if actual_types:
+                    majority = max(set(actual_types), key=actual_types.count)
+                    if majority != expected:
+                        mismatches += 1
+                total_checked += 1
+            except Exception:
+                continue
+        if total_checked > 0:
+            inconsistency_rate = mismatches / total_checked
+            if inconsistency_rate > self.incremental_inconsistency_threshold:
+                # 不一致率 > 5% → 触发该簇全量重分类
+                results["_reclassify_triggered"] = {
+                    "inconsistency_rate": inconsistency_rate,
+                    "action": "full_reclassification",
+                }
 
         return results
 
@@ -3470,6 +3550,269 @@ class AutoValidator:
         # 步骤 4: 其余 → 人工 Gate
         return ValidationResult.HUMAN_GATE, "uncertain: in [0.3, 0.7) confidence range"
 ```
+
+### Task 4.2b：人工 Gate CLI 界面
+
+**依赖:** Task 4.2 完成
+**Files:**
+- Create: `value-datadna/src/discovery/human_gate.py`
+
+**对应设计文档:** Section 6.5 阶段3 (人工 Gate)
+
+```python
+# src/discovery/human_gate.py — Section 6.5
+"""
+人工 Gate CLI (Section 6.5)。
+安全团队确认/标记非敏感/忽略候选新类型。
+唯一必须人工参与的节点。
+
+Usage:
+  # 查看待审核候选
+  python -m src.discovery.human_gate --list
+
+  # 交互式审核
+  python -m src.discovery.human_gate --review
+
+  # 批量确认
+  python -m src.discovery.human_gate --accept <candidate_id> --type <type_name>
+  python -m src.discovery.human_gate --reject <candidate_id> --reason <reason>
+"""
+import argparse
+import json
+import os
+import sys
+from datetime import datetime
+from typing import List, Dict, Optional
+from dataclasses import dataclass, field
+from enum import Enum
+
+
+class GateDecision(Enum):
+    CONFIRM_NEW_TYPE = "confirm_new_type"    # 确认新敏感类型
+    MARK_NON_SENSITIVE = "mark_non_sensitive"  # 标记为非敏感
+    IGNORE = "ignore"                          # 忽略, 等待更多数据
+    DEFER = "defer"                            # 推迟 (信息不足)
+
+
+@dataclass
+class HumanGateEntry:
+    """待人工审核条目"""
+    candidate_id: str
+    pattern_hash: str
+    regex_pattern: str
+    sample_values: List[str] = field(default_factory=list)
+    total_count: int = 0
+    label_hints: List[str] = field(default_factory=list)
+    auto_validation_result: str = ""          # "auto_pass" | "conflict" | "human_gate"
+    auto_validation_reason: str = ""
+    truth_table_confidence: float = 0.0
+    cos_sim_vs_existing: float = 0.0
+    status: str = "pending"                   # "pending" | "confirmed" | "rejected" | "ignored"
+
+
+class HumanGateCLI:
+    """
+    人工 Gate CLI (Section 6.5)。
+    展示候选模式的模板嵌入和统计特征。
+    安全团队手动提供正则，或在积累更多示例后补充。
+    """
+
+    def __init__(self, pending_dir: str = "output/pending_gate/"):
+        self.pending_dir = pending_dir
+        os.makedirs(pending_dir, exist_ok=True)
+        self._entries: Dict[str, HumanGateEntry] = {}
+
+    def submit(self, entry: HumanGateEntry):
+        """提交候选到人工 Gate 队列 (由 AutoValidator 的 HUMAN_GATE/CONFLICT 结果触发)"""
+        if entry.candidate_id in self._entries:
+            return
+        self._entries[entry.candidate_id] = entry
+        self._save_entry(entry)
+        print(f"[HumanGate] 新增候选: {entry.candidate_id} "
+              f"(reason={entry.auto_validation_result}, count={entry.total_count})")
+
+    def list_pending(self) -> List[HumanGateEntry]:
+        """列出所有待审核候选"""
+        for fname in os.listdir(self.pending_dir):
+            if fname.endswith('.json'):
+                with open(os.path.join(self.pending_dir, fname), 'r') as f:
+                    data = json.load(f)
+                    entry = HumanGateEntry(**data)
+                    self._entries[entry.candidate_id] = entry
+        return sorted(
+            [e for e in self._entries.values() if e.status == "pending"],
+            key=lambda e: e.total_count, reverse=True,
+        )
+
+    def review_interactive(self, type_cache_bridge=None):
+        """交互式审核 (一次展示一个候选)"""
+        pending = self.list_pending()
+        if not pending:
+            print("No pending candidates.")
+            return
+
+        print(f"\n{'='*60}")
+        print(f"  人工 Gate 审核 — {len(pending)} 个待处理候选")
+        print(f"{'='*60}\n")
+
+        for entry in pending:
+            self._display_candidate(entry)
+            decision = self._prompt_decision()
+            self._apply_decision(entry, decision, type_cache_bridge)
+
+    def _display_candidate(self, entry: HumanGateEntry):
+        """展示候选详细信息"""
+        print(f"候选 ID: {entry.candidate_id}")
+        print(f"正则模式: {entry.regex_pattern or '(无)'}")
+        print(f"出现次数: {entry.total_count}")
+        print(f"列名分布: {entry.label_hints[:10]}")
+        print(f"样本值 ({len(entry.sample_values)}):")
+        for i, val in enumerate(entry.sample_values[:10]):
+            print(f"  [{i}] {val}")
+        if len(entry.sample_values) > 10:
+            print(f"  ... (还有 {len(entry.sample_values) - 10} 个)")
+        print(f"真值表置信度: {entry.truth_table_confidence:.3f}")
+        print(f"与已知类型 cos_sim: {entry.cos_sim_vs_existing:.3f}")
+        print(f"自动验证结果: {entry.auto_validation_result}")
+        print(f"自动验证原因: {entry.auto_validation_reason}")
+        print()
+
+    def _prompt_decision(self) -> tuple[GateDecision, str]:
+        """交互式输入决策"""
+        print("决策选项:")
+        print("  1 = 确认为新敏感类型 (需提供类型名)")
+        print("  2 = 标记为非敏感")
+        print("  3 = 忽略 (等待更多数据)")
+        print("  4 = 推迟 (信息不足)")
+        while True:
+            try:
+                choice = input("请选择 [1-4]: ").strip()
+                if choice == "1":
+                    type_name = input("请输入新类型名称 (如 CUSTOMER_ID): ").strip().upper()
+                    if type_name:
+                        return GateDecision.CONFIRM_NEW_TYPE, type_name
+                    print("类型名不能为空")
+                elif choice == "2":
+                    reason = input("标记为非敏感原因 (可选): ").strip() or "manual_review"
+                    return GateDecision.MARK_NON_SENSITIVE, reason
+                elif choice == "3":
+                    return GateDecision.IGNORE, "waiting_for_more_data"
+                elif choice == "4":
+                    return GateDecision.DEFER, "insufficient_information"
+                else:
+                    print("无效选择, 请输入 1-4")
+            except (EOFError, KeyboardInterrupt):
+                print("\n审核中断")
+                sys.exit(0)
+
+    def _apply_decision(self, entry: HumanGateEntry,
+                        decision: tuple[GateDecision, str],
+                        type_cache_bridge=None):
+        """应用人工决策"""
+        gate_decision, detail = decision
+
+        if gate_decision == GateDecision.CONFIRM_NEW_TYPE:
+            entry.status = "confirmed"
+            print(f"✓ 已确认新类型: {detail}")
+            # Section 6.6 步骤5: 人工确认后 → 立即写入 type_cache
+            if type_cache_bridge:
+                for val in entry.sample_values[:50]:
+                    type_cache_bridge.on_human_confirmation(
+                        val, detail, entry.label_hints[0] if entry.label_hints else ""
+                    )
+
+        elif gate_decision == GateDecision.MARK_NON_SENSITIVE:
+            entry.status = "rejected"
+            print(f"✓ 已标记为非敏感: {detail}")
+
+        elif gate_decision == GateDecision.IGNORE:
+            entry.status = "ignored"
+            print(f"✓ 已忽略 (等待更多数据)")
+
+        elif gate_decision == GateDecision.DEFER:
+            print(f"✓ 已推迟")
+
+        self._save_entry(entry)
+
+    def _save_entry(self, entry: HumanGateEntry):
+        path = os.path.join(self.pending_dir, f"{entry.candidate_id}.json")
+        # 排除内部 _entries 引用
+        data = {
+            k: v for k, v in entry.__dict__.items()
+        }
+        with open(path, 'w') as f:
+            json.dump(data, f, indent=2, ensure_ascii=False, default=str)
+
+    def batch_accept(self, candidate_id: str, type_name: str,
+                     type_cache_bridge=None) -> bool:
+        """批量确认 (非交互式)"""
+        fpath = os.path.join(self.pending_dir, f"{candidate_id}.json")
+        if not os.path.exists(fpath):
+            print(f"候选 {candidate_id} 不存在")
+            return False
+        with open(fpath, 'r') as f:
+            data = json.load(f)
+        entry = HumanGateEntry(**data)
+        self._apply_decision(entry, (GateDecision.CONFIRM_NEW_TYPE, type_name), type_cache_bridge)
+        return True
+
+    def batch_reject(self, candidate_id: str, reason: str = "rejected") -> bool:
+        """批量拒绝 (非交互式)"""
+        fpath = os.path.join(self.pending_dir, f"{candidate_id}.json")
+        if not os.path.exists(fpath):
+            print(f"候选 {candidate_id} 不存在")
+            return False
+        with open(fpath, 'r') as f:
+            data = json.load(f)
+        entry = HumanGateEntry(**data)
+        entry.status = "rejected"
+        self._save_entry(entry)
+        return True
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="DataDNA Human Gate CLI")
+    parser.add_argument("--list", action="store_true", help="列出待审核候选")
+    parser.add_argument("--review", action="store_true", help="交互式审核")
+    parser.add_argument("--accept", type=str, help="确认候选ID")
+    parser.add_argument("--type", type=str, help="新类型名称 (配合 --accept)")
+    parser.add_argument("--reject", type=str, help="拒绝候选ID")
+    parser.add_argument("--reason", type=str, default="rejected", help="拒绝原因")
+    args = parser.parse_args()
+
+    cli = HumanGateCLI()
+
+    if args.list:
+        entries = cli.list_pending()
+        print(f"\n待审核候选: {len(entries)}")
+        for e in entries:
+            print(f"  {e.candidate_id}: {len(e.sample_values)} samples, "
+                  f"count={e.total_count}, status={e.status}")
+        sys.exit(0)
+
+    if args.review:
+        cli.review_interactive()
+        sys.exit(0)
+
+    if args.accept and args.type:
+        cli.batch_accept(args.accept, args.type)
+        sys.exit(0)
+
+    if args.reject:
+        cli.batch_reject(args.reject, args.reason)
+        sys.exit(0)
+
+    parser.print_help()
+```
+
+- [ ] **Step 2: Commit**
+
+```bash
+git add value-datadna/src/discovery/human_gate.py
+git commit -m "feat: add Human Gate CLI for new type confirmation (Section 6.5)"
+```
+
+---
 
 ### Task 4.3：引擎更新 + LoRA 增量训练
 
@@ -3751,10 +4094,12 @@ class DriftMonitor:
     分布偏移监控 (Section 7.4)。
     每次部署到新数据环境: 6 维特征 KL 散度 vs 校准基线。
     KL > 0.5 → 告警, 建议重校准。
+    同时触发 FeatureExtractor.w_synth 衰减 (Section 3.5.1 validated_count 注记)。
     """
 
-    def __init__(self, baseline_distributions: dict):
+    def __init__(self, baseline_distributions: dict, feature_extractor=None):
         self.baseline = baseline_distributions
+        self.feature_extractor = feature_extractor  # 可选: 用于触发 w_synth 衰减
 
     def check(self, current_distributions: dict) -> dict:
         alerts = {}
@@ -3766,6 +4111,11 @@ class DriftMonitor:
                 kl = entropy(current_hist + 1e-10, baseline_hist + 1e-10)
                 if kl > 0.5:
                     alerts[dim] = round(kl, 3)
+
+        # Section 3.5.1 + Section 7.4: KL 偏移触发 w_synth 衰减
+        if alerts and self.feature_extractor:
+            self.feature_extractor.update_validated_count_weights(alerts)
+
         return alerts
 ```
 
@@ -3783,6 +4133,276 @@ class DriftMonitor:
 - R5: 故障注入退化测试 (NER/真值表/LLM/嵌入模型 不可用)
 - R6: 质量监控框架 (抽检 FDR, KL 散度, entity_type_hint 冲突率)
 - R7: 每组件退出条件检查
+
+### Task 5.3：R6 监控指标收集模块
+
+**依赖:** Phase 1D 完成
+**可并行:** 与 Phase 5 其他任务并行
+**Files:**
+- Create: `value-datadna/src/monitoring/metrics.py`
+- Test: `value-datadna/tests/test_monitoring.py`
+
+**对应设计文档:** Section 8.2 R6 质量监控与告警
+
+```python
+# src/monitoring/metrics.py — Section 8.2 R6 监控指标收集
+from collections import deque
+from typing import Dict, List, Tuple
+import time
+import numpy as np
+from scipy import stats
+
+
+class SlidingWindowMetrics:
+    """滑动窗口指标追踪 (R6: Per-type Recall 漂移, needs_review 异常率)"""
+
+    def __init__(self, window_size: int = 1000, num_windows: int = 3):
+        self.window_size = window_size
+        self.num_windows = num_windows
+        # per_type → deque of (timestamp, recall)
+        self._recall_windows: Dict[str, deque] = {}
+        self._needs_review_rates: deque = deque(maxlen=num_windows)
+        self._fdr_samples: deque = deque(maxlen=num_windows)
+
+    def record_batch(self, per_type_recall: Dict[str, float],
+                     needs_review_count: int, total_count: int):
+        """记录一批分类结果的指标"""
+        ts = time.time()
+        for ptype, recall in per_type_recall.items():
+            if ptype not in self._recall_windows:
+                self._recall_windows[ptype] = deque(maxlen=self.num_windows)
+            self._recall_windows[ptype].append((ts, recall))
+
+        if total_count > 0:
+            self._needs_review_rates.append(needs_review_count / total_count)
+
+    def check_recall_drift(self, baseline: Dict[str, float]) -> List[str]:
+        """
+        R6: Per-type Recall 漂移检测。
+        连续 3 窗口下降 > 10% (绝对值) → 告警。
+        """
+        alerts = []
+        for ptype, window_deque in self._recall_windows.items():
+            if len(window_deque) < self.num_windows:
+                continue
+            baseline_recall = baseline.get(ptype, 0.0)
+            recent_recalls = [r for _, r in window_deque]
+            # 检查连续下降
+            drops = [baseline_recall - r for r in recent_recalls]
+            if all(d > 0.10 for d in drops):
+                alerts.append(
+                    f"{ptype}: recall dropped {max(drops):.3f} vs baseline {baseline_recall:.3f}"
+                )
+        return alerts
+
+    def check_needs_review_anomaly(self, baseline_rate: float = None) -> bool:
+        """
+        R6: LLM needs_review 率异常检测。
+        > 3σ 偏离历史均值 → 告警。
+        返回 True 表示异常。
+        """
+        if len(self._needs_review_rates) < 3:
+            return False
+        rates = list(self._needs_review_rates)
+        mean_rate = np.mean(rates[:-1])  # 历史窗口均值
+        std_rate = np.std(rates[:-1]) + 1e-10
+        current = rates[-1]
+        return abs(current - mean_rate) > 3 * std_rate
+
+
+class FDRSpotEstimator:
+    """
+    R6: FDR 估算 (每 1000 值抽 20 人工标注)。
+    通过蓄水池抽样 (reservoir sampling) 维护待人工验证样本池。
+    """
+
+    def __init__(self, sample_interval: int = 1000, sample_size: int = 20):
+        self.sample_interval = sample_interval
+        self.sample_size = sample_size
+        self._counter = 0
+        self._reservoir: List[dict] = []
+
+    def ingest(self, classification_result) -> dict | None:
+        """
+        蓄水池抽样: 每 sample_interval 个值保留 sample_size 个待人工验证。
+        返回被选中的样本 (需人工标注) 或 None。
+        """
+        self._counter += 1
+        if self._counter % self.sample_interval != 0:
+            return None
+        # 触发抽样: 保留最近 sample_size 个正预测 (预测为敏感类型的)
+        self._reservoir = []  # 简化: 每次触发重新抽样
+        return {"trigger": True, "count": self._counter}
+
+    def estimate_fdr(self, human_labels: List[bool]) -> float:
+        """
+        根据人工标注计算 FDR。
+        human_labels: True=误报(FP), False=正确(TP)
+        """
+        if not human_labels:
+            return 0.0
+        fp = sum(human_labels)
+        tp = len(human_labels) - fp
+        return fp / (fp + tp) if (fp + tp) > 0 else 0.0
+
+    def check_fdr_threshold(self, human_labels: List[bool], threshold: float = 0.15) -> bool:
+        """R6: 抽检 FDR > 0.15 → 告警。返回 True 表示需告警。"""
+        return self.estimate_fdr(human_labels) > threshold
+
+
+class ConflictRateMonitor:
+    """
+    R6: entity_type_hint 冲突率监控。
+    NER entity_type_hint 与最终分类冲突率 > 3σ 偏离历史均值 → 告警。
+    """
+
+    def __init__(self):
+        self._conflict_rates: deque = deque(maxlen=30)  # 30 窗口
+        self._total = 0
+        self._conflicts = 0
+
+    def record(self, entity_type_hint: str, final_classification: str | None):
+        """记录一次分类结果"""
+        self._total += 1
+        # 冲突: NER 提示 PERSON_NAME 但最终分类不是 NAME
+        hint_to_type = {"PERSON_NAME": "NAME", "LOCATION": "ADDRESS"}
+        expected = hint_to_type.get(entity_type_hint)
+        if expected and final_classification != expected:
+            self._conflicts += 1
+
+    def flush_window(self) -> float:
+        """结束当前窗口，返回冲突率"""
+        rate = self._conflicts / max(self._total, 1)
+        self._conflict_rates.append(rate)
+        self._total = 0
+        self._conflicts = 0
+        return rate
+
+    def check_anomaly(self) -> bool:
+        """> 3σ 偏离 → 告警"""
+        if len(self._conflict_rates) < 10:
+            return False
+        rates = list(self._conflict_rates)
+        mean_rate = np.mean(rates[:-1])
+        std_rate = np.std(rates[:-1]) + 1e-10
+        return abs(rates[-1] - mean_rate) > 3 * std_rate
+
+
+class BufferPoolMonitor:
+    """
+    R6: 缓冲池增长监控。
+    候选新类型发现率 > 基线 3σ → 告警。
+    """
+
+    def __init__(self, baseline_calibration_windows: int = 7):
+        self._discovery_rates: deque = deque(maxlen=30)
+        self._baseline_mean: float | None = None
+        self._baseline_std: float | None = None
+        self._calibration_windows = baseline_calibration_windows
+        self._calibrated = False
+
+    def record(self, new_candidates_count: int, window_duration_hours: float):
+        """记录一个窗口内的候选发现率 (candidates/hour)"""
+        rate = new_candidates_count / max(window_duration_hours, 0.01)
+        self._discovery_rates.append(rate)
+
+        # 首周后自动计算基线
+        if not self._calibrated and len(self._discovery_rates) >= self._calibration_windows:
+            rates = list(self._discovery_rates)
+            self._baseline_mean = np.mean(rates)
+            self._baseline_std = np.std(rates) + 1e-10
+            self._calibrated = True
+
+    def check_anomaly(self) -> bool:
+        """> 基线 3σ → 告警"""
+        if not self._calibrated:
+            return False
+        rates = list(self._discovery_rates)
+        if len(rates) < 2:
+            return False
+        current = rates[-1]
+        return abs(current - self._baseline_mean) > 3 * self._baseline_std
+```
+
+```python
+# tests/test_monitoring.py
+import pytest
+from src.monitoring.metrics import (
+    SlidingWindowMetrics, FDRSpotEstimator, ConflictRateMonitor, BufferPoolMonitor,
+)
+
+
+class TestSlidingWindowMetrics:
+    def test_recall_drift_detection(self):
+        swm = SlidingWindowMetrics(window_size=100, num_windows=3)
+        baseline = {"SSN": 0.95}
+        # 连续 3 窗口低于 baseline 10%+
+        swm.record_batch({"SSN": 0.80}, 5, 100)
+        swm.record_batch({"SSN": 0.78}, 8, 100)
+        swm.record_batch({"SSN": 0.75}, 12, 100)
+        alerts = swm.check_recall_drift(baseline)
+        assert len(alerts) == 1
+        assert "SSN" in alerts[0]
+
+    def test_no_drift_when_stable(self):
+        swm = SlidingWindowMetrics(window_size=100, num_windows=3)
+        baseline = {"SSN": 0.90}
+        swm.record_batch({"SSN": 0.89}, 5, 100)
+        swm.record_batch({"SSN": 0.90}, 5, 100)
+        swm.record_batch({"SSN": 0.88}, 5, 100)
+        alerts = swm.check_recall_drift(baseline)
+        assert len(alerts) == 0
+
+
+class TestFDRSpotEstimator:
+    def test_fdr_estimation(self):
+        est = FDRSpotEstimator(sample_interval=20, sample_size=5)
+        # 2 TP + 1 FP → FDR = 1/3 ≈ 0.33
+        human_labels = [False, False, True]
+        fdr = est.estimate_fdr(human_labels)
+        assert abs(fdr - 1 / 3) < 0.01
+
+    def test_fdr_threshold_alert(self):
+        est = FDRSpotEstimator()
+        # 3 FP out of 5 → FDR = 0.6 > 0.15
+        assert est.check_fdr_threshold([True, True, True, False, False]) is True
+        # 0 FP out of 5 → FDR = 0.0 < 0.15
+        assert est.check_fdr_threshold([False, False, False, False, False]) is False
+
+
+class TestConflictRateMonitor:
+    def test_conflict_detection(self):
+        mon = ConflictRateMonitor()
+        mon.record("PERSON_NAME", "API_KEY")  # 冲突: hint=NAME, final=API_KEY
+        mon.record("PERSON_NAME", "NAME")      # 正确
+        mon.record("LOCATION", "ADDRESS")       # 正确
+        rate = mon.flush_window()
+        assert rate == 1 / 3
+
+
+class TestBufferPoolMonitor:
+    def test_baseline_calibration(self):
+        mon = BufferPoolMonitor(baseline_calibration_windows=3)
+        for _ in range(3):
+            mon.record(10, 1.0)  # 10 candidates/hour
+        assert mon._calibrated
+
+    def test_anomaly_detection_after_calibration(self):
+        mon = BufferPoolMonitor(baseline_calibration_windows=3)
+        for _ in range(3):
+            mon.record(5, 1.0)  # baseline: ~5/hr
+        # 异常: 50/hr (远超 3σ)
+        mon.record(50, 1.0)
+        assert mon.check_anomaly() is True
+```
+
+- [ ] **Step 3: Commit**
+
+```bash
+cd value-datadna && pytest tests/test_monitoring.py -v
+git add value-datadna/src/monitoring/metrics.py value-datadna/tests/test_monitoring.py
+git commit -m "feat: add R6 monitoring metrics (recall drift, FDR, conflict rate, buffer pool)"
+```
 
 ---
 
@@ -4390,13 +5010,15 @@ git commit -m "feat: add R7 exit condition checker + end-to-end tests"
 | 3A.1 SD嵌入+模板库 | 0.x + 1B(PII模式) | ✅ |
 | 3B.1-2 文件聚类 | 0.x | ✅ |
 | 3C.1 标签传播 | **1D + 3B + 3A**(增量匹配) | ❌ |
-| 3C.2 三路径编排器 | **1D + 2C + 3B** | ❌ |
-| 4.1 未知模式收集(条件A+B) | **1D** | ✅ (部分与 3A 并行) |
+| 3C.2 三路径编排器 | **1D + 2C + 3B + 3A**(SD增量匹配) | ❌ |
+| 4.1 未知模式收集(条件A+B) | **1D** (条件A+B) / **1D + 3A** (条件C) | ✅ (条件A+B与1D并行) |
 | 4.1b 未知模式收集(条件C) | **1D + 3A** | ❌ |
 | 4.2 自动验证 | **4.1** | ❌ |
+| 4.2b 人工 Gate CLI | **4.2** | ❌ |
 | 4.3 引擎更新+增量训练 | **4.2 + 1C(NER基础)** | ❌ |
 | 4.4 闭环延迟窗口+退化防护 | **4.3 + 2C(cache)** | ❌ |
 | 5.1-2 审计/监控/评估框架 | **1D** | ✅ (与其他并行) |
+| 5.3 R6 监控指标收集 | **1D** | ✅ (与 Phase 5 其他任务并行) |
 | 6.1 标注数据流水线 L1-L4 | **1B**(PII模式+合成) | ✅ |
 | 6.2 公共数据源集成 | **1B**(PII模式) | ✅ |
 | 6.3 分轮标注工具+QC | **6.1** | ❌ |
@@ -4420,12 +5042,12 @@ git commit -m "feat: add R7 exit condition checker + end-to-end tests"
 - 开发者 C+D: Task 2B.1 (LLM消歧集成, 需 1D+2A)
 - 开发者 E: Task 2C.1 (在线缓存层, 需 1D)
 - 开发者 F: Task 3C.1-2 (标签传播+编排器, 需 1D+3B+3A+2C)
-- 开发者 G: Task 5.1-2 (审计/监控/评估框架, 需 1D) + Task 6.3 (分轮标注QC, 需 6.1)
+- 开发者 G: Task 5.1-3 (审计/监控/评估/R6指标, 需 1D) + Task 6.3 (分轮标注QC, 需 6.1)
 - 开发者 H: Task 7.1-7.2 (R5/R7 测试实现, 需 1D)
 
 **第三批 (Week 5-6, 4 人):**
 - 开发者 A+C: Task 4.1 (模式收集条件A+B, 需 1D) + Task 4.1b (条件C, 需 3A)
-- 开发者 D+E: Task 4.2 (自动验证, 需 4.1)
+- 开发者 D+E: Task 4.2 (自动验证, 需 4.1) + Task 4.2b (人工Gate CLI, 需 4.2)
 - 开发者 F: Task 4.3 (引擎更新+增量训练, 需 4.2+1C)
 - 开发者 G+H: Task 4.4 (闭环延迟窗口+退化防护, 需 4.3+2C)
 
