@@ -1,6 +1,0 @@
-Employee Record
-SSN: 123-45-6789
-Name: John Smith
-Start Date: 2020-03-15
-Department: Engineering
-Manager: Jane Doe

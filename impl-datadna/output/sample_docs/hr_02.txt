@@ -1,5 +1,0 @@
-New Hire Form
-Social Security: 987-65-4321
-Name: Alice Johnson
-Position: Data Analyst
-Start: 2024-01-10

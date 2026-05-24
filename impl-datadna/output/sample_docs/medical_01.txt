@@ -1,5 +1,0 @@
-Patient Record
-MRN: MR-88421
-Diagnosis: Hypertension Stage 2
-NPI: 1234567890
-Attending: Dr. Sarah Chen

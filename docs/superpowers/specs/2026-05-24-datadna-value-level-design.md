@@ -29,57 +29,38 @@
 
 ## 二、架构总览
 
-### 2.1 最终架构（4 个 Phase 完成态）
+### 2.1 最终架构（单内核三路径）
+
+对标 Cyera：DSPM（离线全量/增量）与 DLP（在线实时）共享同一 DataDNA 分类内核，外壳不同、内核统一。
 
 ```
-数据源 (Database/CSV/JSON/PDF/Text/Code)
-  │
-  ▼
-[Phase 3] 文件级聚类 ── 元数据替换 → 结构指纹 → 文件簇 → 抽样代表文件
-  │
-  ▼
-值提取器 ── 结构化提取器 (CSV/DB/JSON/XML) + 非结构化提取器 (PDF/Text/Code/Email)
-  │
-  ▼
-[前置] Mock 快速过滤 ── 已知虚拟值、全列重复、否定上下文 → MOCK_DATA, 跳过分类
-  │
-  ▼
-结构化抽样 ── 每列/字段抽代表值（去重+分层抽样）
-  │
-  ▼
-┌──────────────────────────────────────────────────────────┐
-│  Phase 1: 核心分类内核                                     │
-│                                                          │
-│  候选值 → 6维特征计算 → 真值表引擎 → truth_table_confidence │
-│         → Semantic Distancing [Phase 3] → distance_score  │
-│                                                          │
-│  融合: weighted_confidence = α×truth_table + (1-α)×distance│
-│                                                          │
-│  NER引擎提供语义特征（作为真值表辅助特征，非独立路径）        │
-└──────────────────────┬───────────────────────────────────┘
-                       │
-                       ▼
-角色判定 ── subject / identifier / reference (自动规则)
-  │
-  ▼
-[后置] 上下文一致性检查 ── 值类型与列名/路径是否匹配
-  │
-  ▼
-┌──────────────────────────────────────────────────────────┐
-│  Phase 2: LLM 消歧层                                      │
-│                                                          │
-│  conf ≥ 0.85  → 直接输出                                  │
-│  0.50 ≤ c < 0.85 → FLAN-T5 Validation (判断题)            │
-│  conf < 0.50 → Mistral-7B Classification (论述题)          │
-│  conf < 0.30 → uncertain, needs_review=True               │
-└──────────────────────┬───────────────────────────────────┘
-                       │
-                       ▼
-ValueClassification 输出 (sensitive_type, confidence, evidence, audit trail)
-  │
-  ▼
-[Phase 4] Learned Classification 闭环 ── 发现 → 验证 → 注册 → 训练 → 部署
+            ┌─────────────────────────────────────────────┐
+            │         DataDNA 值级分类内核 (统一)           │
+            │                                             │
+            │  classify(value, context) → ValueClassification│
+            │                                             │
+            │  6维特征 → 真值表 + NER语义特征              │
+            │  → 融合 (×Semantic Distancing)              │
+            │  → 角色判定 → 上下文一致性                   │
+            │  → LLM 消歧 (Validation/Classification)    │
+            └──────┬──────────────┬──────────────┬────────┘
+                   │              │              │
+    ┌──────────────▼──┐  ┌────────▼───────┐  ┌──▼──────────────┐
+    │  路径A: 离线全量 │  │ 路径B: 离线增量 │  │ 路径C: 在线实时  │
+    │  (DSPM 首次接入) │  │ (DSPM 变更扫描) │  │ (DLP 单值/API)   │
+    ├─────────────────┤  ├────────────────┤  ├─────────────────┤
+    │                 │  │                │  │                 │
+	    │ 数据源           │  │ 变更磁盘块      │  │ API请求/流量拦截  │
+	    │  → 文件级聚类    │  │  → 元数据归一化  │  │  → 单值提取      │
+	    │  → 值提取+抽样   │  │  → hash精确匹配  │  │  → 缓存查询       │
+	    │  → 分类内核      │  │   (命中→继承标签)│  │   (hit→直接返回)  │
+	    │  → 标签传播      │  │   (未命中→SD匹配)│  │   (miss→分类内核) │
+	    │  → 输出          │  │    (近→继承标签) │  │  → 缓存写入       │
+	    │                 │  │    (远→缓冲队列) │  │  → 策略执行/输出  │
+    └─────────────────┘  └────────────────┘  └─────────────────┘
 ```
+
+**关键设计决策**：三种路径共享完全相同的分类内核（`classify()` 接口），差异仅在内核之前的外壳层。这保证 DSPM 和 DLP 之间的分类一致性——对标 Cyera Omni DLP "共享 DataDNA 分类引擎" 的设计。
 
 ### 2.2 分阶段实施路线
 
@@ -101,6 +82,126 @@ ValueClassification 输出 (sensitive_type, confidence, evidence, audit trail)
 | 效率策略 | 3级门控 (fast/validate/full) | 聚类降维 (文件级) + 2级LLM消歧 |
 | 规模机制 | 缺聚类层 (R4始终不达标) | 文件级聚类从Phase 3设计之初就纳入 |
 | 自学习 | 文档级类型发现 (~150行未实现) | 值模式发现 + 统计验证 + 人工Gate + 增量训练 |
+
+### 2.4 技术栈
+
+| 组件 | 选型 | 说明 |
+|------|------|------|
+| **运行环境** | Python 3.11+, PyTorch 2.5+, CUDA 12.x, Docker | 内核纯 Python，GPU 推理依赖 CUDA |
+| **值提取—结构化** | csv / json / xml stdlib, sqlalchemy | CSV字段、数据库列、JSON路径、XML XPath 批量提取 |
+| **值提取—非结构化** | pymupdf, python-docx, openpyxl | PDF文本、Word文档、Excel表格；邮件正文、代码行、Slack消息 |
+| **PII 正则** | 自定义正则 (30+ 类型) + Luhn 算法 | 信用卡校验位验证；SWIFT IBAN Registry 全球格式校验 |
+| **Mock 过滤** | 正则白名单 + 否定上下文词库 | 已知虚拟模式 (000-00-0000, 4111-...)、test/sample/mock 等否定词 |
+| **嵌入模型** | E5-base / all-mpnet-base-v2 | Semantic Distancing 嵌入；109M 参数，768 维，VRAM ~0.5GB |
+| **NER—冷启动** | GLiNER | 零样本实体识别，无标注首日可用 |
+| **NER—微调** | BERT-base (英文) / RoBERTa | BIO 序列标注微调，27 类实体标签 |
+| **NER—蒸馏** | Qwen3:8b (教师) → BERT (学生) | LLM 标注蒸馏，降低推理成本 |
+| **真值表存储** | pandas MultiIndex DataFrame | 6/7 维离散索引 → confidence，6维 7500 状态，O(1) 查询 |
+| **真值表插值** | scipy.spatial.KDTree | 缺失 bin 最近邻插值，近似 O(log n) |
+| **真值表校准** | scikit-learn (IsotonicRegression / LogisticRegression) | Platt scaling 分数校准；Laplace 平滑处理稀疏 bin |
+| **LLM—验证** | FLAN-T5 Large (780M) | Encoder-Decoder 架构；判断题 (yes/no)；FP16 VRAM ~1.5GB |
+| **LLM—分类** | Mistral-7B-Instruct (7B, Q4_K_M) | Decoder-Only 架构；论述题 (开放分类)；GGUF 量化 VRAM ~4GB |
+| **LLM—服务** | Ollama | 本地模型 serving；支持 batch API 并发 |
+| **融合评分** | Platt scaling + 加权平均 | 真值表与 SD 分数各自校准到 [0,1] 概率空间后加权融合 (α=0.7) |
+| **文件级聚类** | 元数据归一化 + SHA256 指纹 | 流式 O(n) 哈希聚类；元数据 PII 占位符替换后 Hash→簇 |
+| **列内抽样** | 分层抽样 (等频分箱 5-10 层) | 每列 5-20 代表值；层内随机采样防排序偏差 |
+| **模式聚类** | scikit-learn (KMeans / AgglomerativeClustering) | Phase 4 候选模式聚类提名 |
+| **合成数据** | Faker 库 + 自定义生成器 | 15 PII/PCI 类型 × 1000 正样本 + 100 负样本；3 种上下文变体 |
+| **NER 增量训练** | LoRA (rank=8, PEFT) + bitsandbytes | ~5min 增量微调；仅添加新 BIO 标签，不修改已有权重 |
+| **角色判定** | 关键词规则引擎 | subject / identifier / reference 三分类；列名/字段名关键词匹配 |
+| **上下文一致性** | 规则引擎 | 值类型与列名/路径冲突检测；冲突→路由降级 |
+| **分布偏移监控** | scipy.stats (KL 散度) | 6 维特征分布 vs 校准基线；KL > 0.5 告警 |
+| **评估指标** | scikit-learn (classification_report) + 自定义 | Per-type P/R/F1, Macro F1, Pooled FDR, P50/P95/P99 延迟 |
+| **审计日志** | JSONL | 每条分类决策全程可追溯：引擎输出→中间分数→最终判定 |
+| **数据存储** | parquet (真值表), JSON (审计/报告), YAML (配置) | 真值表高频读取选列存 parquet；审计日志 append-only JSONL |
+| **硬件目标** | RTX 5070 12GB VRAM | 全组件 VRAM 预算 ~7GB / 12GB (2GB buffer) |
+
+### 2.5 三种到达模式
+
+内核 (`classify(value, context) → ValueClassification`) 对三条路径完全相同，差异仅在内核之外的外壳层。
+
+#### 路径A：离线全量 — 首次数据源接入
+
+对标 Cyera DSPM 首次全量扫描。PB 级数据通过聚类降维后仅代表值进入内核。
+
+```
+数据源 (DB/CSV/JSON/PDF/...)
+  → [Phase 3] 文件级聚类: 元数据归一化 → SHA256 指纹 → 文件簇 (~5000簇)
+  → 每簇选 3 个代表文件
+  → 值提取: 结构化提取器 + 非结构化提取器
+  → Mock 过滤 + 结构化抽样 (每列 5-20 代表值)
+  → 分类内核 classify()
+  → 标签传播: majority_type + consistency ≥ 0.8 → 簇内全量继承
+  → 抽检验证: 每簇 5% 列 × 3 值, 不一致率 > 10% → 拆簇重分类
+```
+
+**触发**: 首次接入数据源 / 手动触发全量重扫  
+**聚类降维**: 是（核心减量手段，99.99%+ 降维比）  
+**标签传播**: 是（簇内全量继承）
+
+#### 路径B：离线增量 — 变更数据同步
+
+对标 Cyera DSPM 增量扫描（专利 US12566567B2 的变更块扫描 + 专利 US20240362301A1 的增量聚类匹配）。仅处理新/变更文件，复用已有簇结构。
+
+```
+变更检测 (新增/修改的文件和表)
+  → 值提取 + 元数据归一化 (同路径A的 PII 替换流程)
+  → 指纹 hash 精确匹配已有簇:
+      归一化元数据 → SHA256 → 与已有簇指纹库比对
+      hash 命中 → 直接继承该簇标签, confidence = 1.0 (覆盖 >90% 增量文件)
+      hash 未命中 → 进入 SD 二次匹配
+  → Semantic Distancing 二次匹配:
+      PII 占位符替换后文本 → 嵌入 → 与已有簇模板库计算 cosine similarity
+      cos_sim ≥ 0.85 且与最近簇一致 → 继承该簇标签, confidence = cos_sim
+      cos_sim < 0.85 或无匹配      → 标记 outlier, 入缓冲队列
+  → 缓冲队列:
+      累积 ≥ 500 或距上次处理 > 1h → 小批量聚类 → 分类内核 → 传播 → 注册新簇指纹
+  → 增量传播:
+      新文件直接继承标签 (不触发全簇重分类)
+      仅缓冲队列产生的新簇触发抽样分类
+  → 定期抽检: 增量继承的文件中随机 3% 走完整分类内核验证
+     不一致率 > 5% → 触发该簇全量重分类
+```
+
+**触发**: 定时任务 (如每 15min) / 变更事件驱动  
+**聚类降维**: 否（仅新文件，量小；hash 精确匹配 + SD 匹配代替聚类，O(1) 每文件）  
+**标签传播**: 部分（hash/SD 匹配到的直接继承，outlier 入缓冲）  
+**Semantic Distancing 第二用途**: 增量匹配已有簇——hash 精确匹配之后、缓冲重分类之前的二次匹配层（非评分用途）
+
+#### 路径C：在线实时 — 单值/API 请求
+
+对标 Cyera DLP 实时路径（Omni DLP 的统一分类接口）。单值或小批量直接调用内核，无聚类和抽样。
+
+```
+API 请求 / DLP 流量拦截 / Browser Shield
+  → 值提取 (trivial: 单值或小批量)
+  → 缓存查询: pattern_hash → cached_classification
+      hit 且 TTL 有效 → 直接返回 (延迟 < 1ms)
+      miss → 分类内核 classify()
+  → 分类内核:
+      与离线路径完全相同的 classify() 调用
+      含 Mock 过滤 + 真值表 + NER + 融合 + LLM 消歧全流程
+  → 缓存写入: pattern_hash → ValueClassification (TTL 24h)
+  → 策略执行 / API 响应
+```
+
+**触发**: 外部 API 调用 / DLP 执行点拦截  
+**聚类降维**: 否（单值，无降维需求）  
+**标签传播**: 否  
+**缓存层**: 是（pattern_hash 索引，TTL 24h，与 Section 6.6 的 type_cache 共享存储）
+
+#### 三种模式对比
+
+| 维度 | 路径A 离线全量 | 路径B 离线增量 | 路径C 在线实时 |
+|------|:--:|:--:|:--:|
+| 数据量 | PB 级 | 单次 MB-GB | 单值/小批量 |
+| 聚类降维 | ✅ 核心手段 | ❌ SD匹配代替 | ❌ |
+| 抽样 | ✅ 分层抽样 | ❌ 全量（量小） | ❌ |
+| 缓存 | ❌ | ❌ | ✅ TTL 24h |
+| 标签传播 | ✅ 簇内继承 | ⚠️ 部分 | ❌ |
+| 分类内核 | `classify()` | `classify()` | `classify()` |
+| 延迟目标 | 离线批处理 | 分钟级 | P50 < 100ms |
+| 对标 Cyera | DSPM 全量扫描 | DSPM 增量扫描 | Omni DLP 实时 |
 
 ---
 
@@ -178,8 +279,8 @@ class ValueSource:
 
 | 维度 | 含义 | 计算方式 | 离散化 |
 |------|------|------|------|
-| `regex_strength` | 正则特异性 | 匹配模式的 specificity | [0, 0.25, 0.5, 0.75, 1.0] |
-| `validated_count` | 同模式已确认实例数 | 该模式在数据集/历史中被确认为真实敏感数据的次数 | {0, 1-3, 4-9, 10-49, 50+} |
+| `regex_strength` | 正则特异性 | 经验误报率：在非敏感文本基准语料上运行正则，specificity = 1 - (误报命中数 / 总扫描文本数)，自然归一化到 [0,1] | [0, 0.25, 0.5, 0.75, 1.0] |
+| `validated_count` | 同模式已确认实例数 | 合成数据生成阶段的生成量（冷启动）+ 真实数据流中 LLM/人工确认次数。两类分开计数，加权求和后离散化：score = w_synth × count_synth + w_real × count_real。冷启动 w_synth=1.0, w_real=0；真实数据积累后衰减 w_synth | {0, 1-3, 4-9, 10-49, 50+} |
 | `supportive_context` | 支持性上下文词命中 | 上下文匹配"SSN", "social security"等词数 | {0, 1, 2, 3+} |
 | `unsupportive_context` | 否定性上下文词命中 | 上下文匹配"test", "sample", "placeholder"等词数 | {0, 1, 2+} |
 | `pattern_frequency` | 模式在数据集中的频率 | 该模式在全量数据中出现次数的分位数 | [0-20%, 20-40%, 40-60%, 60-80%, 80-100%] |
@@ -187,13 +288,19 @@ class ValueSource:
 | `entity_type_hint` | NER 语义类型提示 (可选) | NER 对该值的实体判断 | {PERSON_NAME, ORGANIZATION, LOCATION, GENERIC_ENTITY, NONE} |
 
 > `entity_type_hint` 仅当 NER 引擎可用时填充。对不含在敏感类型标注中的实体类型视为 NONE。此维度帮助真值表区分"看起来像名字但实际是 API Key" 等歧义案例。
+>
+> **regex_strength 的基准语料**：使用 Wikipedia 英文摘要 + GitHub 公开代码 + 通用企业文档混合语料（约 10 万篇非敏感文档）。新类型加入时在此语料上重跑即可自动计算特异性，无需人工标注。
+>
+> **validated_count 冷启动注记**：冷启动阶段合成数据量直接填充 validated_count（每类型 2000 生成量 → 50+ 桶）。Section 7.4 的 KL 散度偏移监控检测到分布偏移时，触发 w_synth 衰减，提升真实数据权重。
 
 #### 3.5.2 真值表结构
 
+**每敏感类型一张独立真值表**，各自单独校准和版本管理。内存占用极小（每表 ~0.1MB），15 类型合计 < 2MB。
+
 ```
 pandas MultiIndex DataFrame: 6维 (NER不可用时) 或 7维 (NER可用时) → confidence
-总状态数: 6维 5×5×4×3×5×5 = 7500; 7维增加 ×6 ≈ 45000 组合
-实际非零: 6维 ~2000-3000; 7维 ~5000-8000
+总状态数: 6维 5×5×4×3×5×5 = 7500; 7维增加 ×5 ≈ 37500 组合
+实际非零: 6维 ~2000-3000; 7维 ~4000-6000
 
 查询: O(1) via MultiIndex.loc
 插值: 缺失键 → KD-Tree 最近邻, O(log n)
@@ -207,17 +314,28 @@ pandas MultiIndex DataFrame: 6维 (NER不可用时) 或 7维 (NER可用时) → 
 
 #### 3.5.3 校准流程
 
+**校准数据组成**（每类型真值表）：
+
+| 样本类别 | 数量 | 来源 |
+|------|:--:|------|
+| 正样本 | 2,000 | 该类型合成数据生成（如 SSN 生成器 → label=SSN） |
+| 难负样本 | 500 | 该类型相似但不合法的值（如 9 位非 SSN 格式 → label=NOT_SSN） |
+| 易负样本 | ~28,000 | 其他 14 类的正样本自动复用为该类的负样本（如 EMAIL 正样本 → label=NOT_SSN），无需额外生成 |
+| **每表总量** | **~30,500** | 非零 bin ~2000-3000 个，平均每 bin 10-15 样本（满足 R7 ≥10 门槛） |
+
+**总合成生成量**：15 类型 × (2,000 正 + 500 难负) = 37,500 值。每值 3 种上下文变体（clean / penalty_term / boost_term）。
+
 ```
-输入: 标注数据集 D = {(value, context, label=true/false)}
+输入: 每类型标注数据集 D_type = {(value, context, label=type or NOT_type)}
 
 对每个值:
   1. 计算 6 维特征
   2. 按离散化级别分桶
   3. 每个桶的 confidence = 桶内正样本数 / 桶内总样本数
 
-对稀疏桶: Laplace 平滑
-对空桶: KD-Tree 插值
-输出: calibration_table.parquet
+对稀疏桶: Laplace 平滑 (α=1)
+对空桶: KD-Tree 最近邻插值
+输出: calibration_table_{type}.parquet (每类型独立文件, 带版本号)
 ```
 
 ### 3.6 NER 引擎（语义特征源）
@@ -231,11 +349,14 @@ NER 输入: surrounding_text (值前后 ±100 字符上下文窗口)
 NER 输出: BIO 标签序列
 
 对目标值的具体位置:
-  - 值被标注为 B-NAME / I-NAME             → entity_type_hint = PERSON_NAME
-  - 值被标注为 B-ORG / I-ORG               → entity_type_hint = ORGANIZATION
-  - 值被标注为 B-ADDRESS / I-ADDRESS       → entity_type_hint = LOCATION
+  - 值被标注为 B-NAME / I-NAME             → entity_type_hint = PERSON_NAME  （映射敏感类型 NAME）
+  - 值被标注为 B-ORG / I-ORG               → entity_type_hint = ORGANIZATION  （非敏感类型，辅助消歧）
+  - 值被标注为 B-ADDRESS / I-ADDRESS       → entity_type_hint = LOCATION     （映射敏感类型 ADDRESS）
   - 值被标注为其他实体类型                    → entity_type_hint = GENERIC_ENTITY
   - 值被标注为 O 或无实体覆盖                → entity_type_hint = NONE
+
+> entity_type_hint 的取值（PERSON_NAME / LOCATION）与敏感类型名（NAME / ADDRESS）
+> 有意不同：NER 识别的是通用实体类别，真值表通过校准学习从实体类别到敏感类型的映射。
 
 对结构化值 (regex_strength > 0.7):
   NER 的 entity_type_hint 权重降低 — 强结构值主要由 regex_strength 主导
@@ -395,8 +516,10 @@ Answer with JSON: {"type": "<type or NON_SENSITIVE>", "confidence": 0.0-1.0,
 Validation 结果处理:
   answer="yes" → 保持 candidate_type, confidence = max(true_table.conf, llm.conf)
   answer="no"  → 降级：
-    - 真值表有次高候选 → 取次高, route to Classification
-    - 无次高候选 → route to Classification
+    - 真值表有次高候选 → 取次高作为 hint_candidate 传入 Classification prompt
+      （Classification prompt 增加可选 hint: "A validator rejected {candidate_type}.
+       Consider {hint_candidate} if applicable."）
+    - 无次高候选 → route to Classification（无 hint）
 
 Classification 结果处理:
   type=NON_SENSITIVE → 输出 NON_SENSITIVE
@@ -454,9 +577,29 @@ LLM 响应超时 (>5s):
 
 ### 5.1 Semantic Distancing
 
-#### 5.1.1 定位
+#### 5.1.1 定位与双重用途
 
-对标 Cyera 第 2 组件。独立评分路径，与真值表并列融合，不作为真值表的内嵌维度。
+对标 Cyera 第 2 组件。SD 在架构中有两个独立用途：
+
+| 用途 | 场景 | 输入 | 输出 | 章节 |
+|------|------|------|------|------|
+| **分类评分** | 离线全量 + 在线实时 | 单个值的 PII 替换后文本 | `distance_score ∈ [0,1]` 与真值表融合 | Section 5.1.2-5.1.3 |
+| **增量匹配** | 离线增量 (路径B) | 新文件的 PII 替换后元数据 | 匹配已有簇标签或入缓冲队列 | Section 2.5 路径B |
+
+分类评分用途：独立评分路径，与真值表并列融合，不作为真值表的内嵌维度。
+
+> **两套独立的模板库**：两种用途依赖不同的模板库，共享相同的嵌入模型和 PII 替换逻辑，但库内容和生命周期各自独立：
+>
+> | 维度 | 分类评分模板库 | 增量匹配模板库 |
+> |------|------|------|
+> | **索引键** | `sensitive_type` (如 SSN, CCN) | `cluster_id` (文件簇标识) |
+> | **模板来源** | 合成数据生成 50-100 模板/类型 (Section 5.1.2) | Phase 3 聚类时为每簇计算质心嵌入 |
+> | **构建时机** | 冷启动阶段一次性构建，新类型加入时增量追加 | 首次全量聚类 (路径A) 时构建，缓冲队列产生新簇时增量追加 |
+> | **匹配目标** | 判断值属于哪种已知敏感类型 | 判断新文件属于哪个已知文件簇 |
+> | **更新频率** | 低（仅新类型注册时） | 中（每次缓冲队列批量聚类时） |
+> | **存储** | `templates/types/{type}/` | `templates/clusters/{cluster_id}/` |
+>
+> 两套库的嵌入计算和 cosine similarity 检索共享同一 `SemanticDistancing` 类实例，通过 `library` 参数区分 (`"types"` vs `"clusters"`)。
 
 #### 5.1.2 方案
 
@@ -472,6 +615,10 @@ LLM 响应超时 (>5s):
 与已知模板库计算 cosine similarity:
   template_library = {sensitive_type: [template_embedding_1, template_embedding_2, ...]}
   distance_score = max_cos_sim(value_embedding, type_templates)
+
+> 冷启动模板库构建：从合成数据（Section 7.2）为每种敏感类型生成 50-100 个
+> 含 PII 占位符的模板文本，计算嵌入向量后入库。部署到新环境时，模板库仅依赖
+> 正则 PII 检测（与真值表共享 regex 模式库），无额外冷启动依赖。
      ↓
   distance_score ∈ [0, 1] → 与真值表 confidence 并列融合
 ```
@@ -603,7 +750,20 @@ C. label_hint-分类冲突 (适用所有数据源):
   - 与已有类型 cos_sim ≥ 0.85 (自动合并, 不提名)
   - 现有引擎 confidence ≥ 0.7 且类型正确 (引擎已能覆盖)
 
-仅中等置信度 (0.5-0.8) 的候选 → 进入人工 Gate
+候选路由规则（按优先级执行）:
+
+  1. 自动拒绝优先: 满足任一拒绝条件 → 自动拒绝/合并，不进入人工 Gate
+  2. 冲突裁决: 同时满足通过和拒绝条件 → 路由到人工 Gate（防止嵌入空间与引擎判断矛盾时自动做出错误决策）
+  3. 自动通过: 满足任一通过条件且未触发步骤 1/2 → 自动通过
+  4. 其余候选 (既不满足通过也不满足拒绝) → 进入人工 Gate
+
+  典型进入人工 Gate 的场景:
+    - 真值表 confidence ∈ [0.3, 0.7) 且列名一致性 < 80%
+    - cos_sim ∈ [0.80, 0.85) 的灰色地带（接近已知类型但未达合并阈值）
+    - 统计一致性与模板冲突结果互相矛盾（如列名一致性 > 80% 但 cos_sim ≥ 0.85）
+
+  注: confidence ∈ [0.3, 0.7) 是进入人工 Gate 的必要非充分条件——
+  若候选同时满足统计一致性 > 80% 或 cos_sim < 0.85，仍可自动通过（步骤 3）。
 ```
 
 ### 6.5 阶段 3：人工 Gate
@@ -664,11 +824,24 @@ C. label_hint-分类冲突 (适用所有数据源):
 **流水线A：真值表校准数据**
 
 ```
-输入: 完整数据集 (非标注片段)
+输入: 合成数据 + 公开格式规范
   1. 全数据集正则提取 → 统计模式频率、值唯一性
   2. 对每个值计算 6 维特征
-  3. 标注每个值的敏感类型 (正则匹配 + LLM验证 + 人工确认)
-  4. 构建校准 DataFrame: 6维 bins → annotated confidence
+  3. 标注每个值的敏感类型，按 4 级决策矩阵自动分层：
+```
+
+**标注决策矩阵**（从严格到宽松）：
+
+| 级别 | 条件 | 标注方式 | 适用类型 |
+|:--:|------|------|------|
+| L1 自动 | 正则匹配 + 校验位算法通过 | 自动标注，无需人工 | CCN (Luhn)、IBAN (mod-97) |
+| L2 LLM验证 | 强正则匹配，无校验位 | LLM Validation 确认 (FLAN-T5 判断题) | SSN、IP、Passport、Driver License |
+| L3 LLM分类 | 弱正则匹配，上下文依赖 | LLM Classification 判定 (Mistral 论述题) | Email、Phone、API Key、Bank Account |
+| L4 人工 | 正则不匹配或 L2/L3 LLM 低置信 | 人工标注 (Section 7.3 分轮方案) | Name、Address、NON_SENSITIVE |
+
+```
+  4. 人工标注集走质量控制 (Cohen's Kappa ≥ 0.85, 2人独立 → 第3人裁定)
+  5. 构建校准 DataFrame: 每类型独立 6维 bins → annotated confidence → calibration_table_{type}.parquet
 ```
 
 **流水线B：NER 训练数据**
@@ -690,6 +863,7 @@ C. label_hint-分类冲突 (适用所有数据源):
 | PCI DSS 测试卡号 | CCN | 真值表校准 |
 | US SSA Randomization | SSN 格式和分配规则 | 真值表校准 |
 | IP RFC 规范 | IPv4/IPv6 | 真值表校准 |
+| Wikipedia 英文摘要 + GitHub 公开代码 | 非敏感文本基准 | regex_strength 经验误报率计算（~10 万篇混合语料） |
 | Faker 库 | 全 PII/PCI 类型合成生成 | 真值表校准 + Mock 检测 |
 | Microsoft Presidio | 20+ PII 类型识别器 | 基准对比 |
 | ai4privacy/pii-masking-300k | 英文 PII span | NER 训练 |
@@ -710,8 +884,10 @@ SYNTHETIC_GENERATORS = {
     # ...
 }
 
-每类型: 1000 正样本 + 100 负样本 (相似但不合法)
+每类型: 2000 正样本 + 500 难负样本 (相似但不合法)
+总生成量: 15 类型 × 2500 = 37,500 值
 每值: 3 种上下文变体 (clean / penalty_term / boost_term)
+跨类型负样本: 其他类型的正样本自动复用 (每表额外 ~28,000 负样本，无需额外生成)
 ```
 
 #### 企业文档数据
@@ -787,7 +963,7 @@ datasets/
 | Per-type Precision | 某一敏感类型的判定准确率 | 类型级误报检测 |
 | Macro Recall | 所有类型 Recall 均值 | 防止小众类型被放弃 |
 | Macro Precision | 所有类型 Precision 均值 | 防止误报集中在某些类型 |
-| Pooled FDR | 全量误报 / 全量正预测 | 用户体验——告警中多少是假的 |
+| Pooled FDR | FP / (FP + TP)，其中 TP/FP 定义在"预测为任一敏感类型"范围内（排除 NON_SENSITIVE），等价于 1 - Pooled Precision | 用户体验——告警中多少是假的 |
 | Per-type Miss Rate | 1 - Per-type Recall | 任一类型放弃上限 |
 | LLM 调用率 | 经 LLM 消歧的值占比 | 效率度量（不预设目标值） |
 | P50/P95/P99 延迟 | 单值分类延迟分布 | 吞吐规划输入 |
@@ -856,7 +1032,7 @@ Phase 3 聚类传播完成后:
 | NER 不可用 | 弱结构 + 语义 | Recall 下降 < 20% | 真值表不覆盖，LLM 接管 |
 | NER 不可用 | 强结构 | Recall 下降 < 5% | 强结构不依赖 NER |
 | 真值表不可用 | 强结构 | Recall 下降 < 30% | NER+LLM 部分接管，NER 天然弱于格式识别 |
-| 真值表不可用 | 弱结构 + 语义 | Recall 下降 < 10% | 这些本来就不走真值表 |
+| 真值表不可用 | 弱结构 + 语义 | Recall 下降 < 10% | 真值表对这些类型的 regex_strength 贡献有限，LLM 可大量接管 |
 | LLM 不可用 | 所有 | FDR 不增加，uncertain 率上升 | LLM 不推翻初判 |
 | 嵌入模型不可用 | 所有 | 无影响 | Semantic Distancing 跳过 |
 | 全组件最差 (仅正则) | 强结构 | Recall 下降 < 40% | 正则兜底 |
