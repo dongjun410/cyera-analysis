@@ -392,7 +392,28 @@ Cyera的核心图技术被称为**DataGraph**（也称为Data Security Graph）[
 - 身份与访问（谁可以访问、MFA状态）
 - 活动（Access Trail访问遥测）
 - 业务上下文（Topics层）
-- 合规映射（GDPR、HIPAA等）
+- 合规映射（GDPR、HIPAA等），DataDNA 内置策略引擎覆盖 **13+ 全球合规框架**：
+
+| # | 框架 | 全称 | 类型 | 确认等级 |
+|---|------|------|------|----------|
+| 1 | **GDPR** | General Data Protection Regulation | 隐私 · EU | [A] 官方 |
+| 2 | **HIPAA** | Health Insurance Portability and Accountability Act | 医疗 · US | [A] 官方 |
+| 3 | **PCI-DSS** | Payment Card Industry Data Security Standard | 支付 · 全球 | [A] 官方 |
+| 4 | **CCPA** | California Consumer Privacy Act | 隐私 · US/CA | [A] 官方 |
+| 5 | **GLBA** | Gramm-Leach-Bliley Act | 金融 · US | [A] 专项指南 |
+| 6 | **SOX** | Sarbanes-Oxley Act | 金融 · US | [B] 术语表收录 |
+| 7 | **ISO 27001** | Information Security Management | 安全 · 国际 | [A] 官方 |
+| 8 | **SOC 2** | Service Organization Control 2 | 审计 · 国际 | [B] 行业推导 |
+| 9 | **DORA** | Digital Operational Resilience Act | 金融 · EU | [A] 专项指南 |
+| 10 | **PSD2** | Payment Services Directive 2 | 支付 · EU | [B] 术语表收录 |
+| 11 | **NIST CSF** | NIST Cybersecurity Framework | 安全 · US | [C] 合理推断 |
+| 12 | **NIST AI RMF** | NIST AI Risk Management Framework | AI治理 · US | [A] 官方 |
+| 13 | **EU AI Act** | EU Artificial Intelligence Act | AI治理 · EU | [A] 官方 |
+| 14 | **ISO 42001** | AI Management System Standard | AI治理 · 国际 | [A] 官方 |
+| 15 | **EO 14117** | Executive Order 14117（敏感数据跨境） | 政府 · US | [A] 白皮书专项 |
+
+> **确认等级说明**：[A] 官方产品页/白皮书/专项指南直接确认；[B] 术语表、博客侧栏等间接提及；[C] 行业标准，该类型平台普遍覆盖，合理推断但未找到 Cyera 直接确认。<br>
+> **未公开完整清单**：Cyera 宣称 "13+"，上表为公开可查结果。实际可能还包含 LGPD（巴西）、PIPEDA（加拿大）、PDPA（新加坡）等地区性隐私法，但未获官方确认。
 
 **未公开的细节**：
 - 精确的风险评分算法
